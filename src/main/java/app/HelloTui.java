@@ -17,7 +17,7 @@ public class HelloTui extends ToolkitApp {
         ).rounded();
     }
 
-    static void main() throws Exception {
+    static void main(String... args) throws Exception {
         new HelloTui().run();
     }
 }

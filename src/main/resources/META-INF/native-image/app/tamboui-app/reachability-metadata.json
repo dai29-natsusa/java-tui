@@ -1,0 +1,25 @@
+{
+  "resources": [
+    {
+      "glob": "dev/tamboui/tui/bindings/*.properties"
+    },
+    {
+      "glob": "dev/tamboui/**/*.properties"
+    },
+    {
+      "glob": "dev/tamboui/**/*.tcss"
+    },
+    {
+      "glob": "dev/tamboui/**/*.css"
+    },
+    {
+      "glob": "org/jline/**/*.caps"
+    },
+    {
+      "glob": "org/jline/**/*.txt"
+    },
+    {
+      "glob": "org/jline/**/*.properties"
+    }
+  ]
+}

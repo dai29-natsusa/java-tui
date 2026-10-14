@@ -1,0 +1,41 @@
+name: Native binaries
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  native:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,    target: linux-x64 }
+          - { os: ubuntu-24.04-arm, target: linux-arm64 }
+          - { os: macos-latest,     target: macos-arm64 }
+          - { os: macos-15-intel,   target: macos-x64 }
+          - { os: windows-latest,   target: windows-x64 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: "25"
+          distribution: "graalvm-community"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build native image
+        shell: bash
+        run: ./gradlew nativeCompile
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: tamboui-app-${{ matrix.target }}
+          path: build/native/nativeCompile/tamboui-app*
+          if-no-files-found: error
