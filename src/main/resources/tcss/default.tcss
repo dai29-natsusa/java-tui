@@ -1,0 +1,9 @@
+/* TamboUI TCSS Stylesheet */
+
+.header-panel {
+    color: cyan;
+}
+
+.status-bar {
+    color: gray;
+}

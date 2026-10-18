@@ -1,77 +1,136 @@
 plugins {
-    java
     application
-    // GraalVM Native Build Tools: adds nativeCompile, nativeRun, metadataCopy, ...
-    id("org.graalvm.buildtools.native") version "1.1.14"
+    java
+    id("io.quarkus")
+    id("com.diffplug.spotless") version "8.10.4"
 }
 
-group = "app"
-version = "0.1.0"
+val quarkusPlatformGroupId = project.property("quarkusPlatformGroupId")
+val quarkusPlatformArtifactId = project.property("quarkusPlatformArtifactId")
+val quarkusPlatformVersion = project.property("quarkusPlatformVersion")
+val tambouiVersion = project.property("tambouiVersion")
+val nativePlatform: String = project.findProperty("nativePlatform")?.toString() ?: "linux"
 
-val tambouiVersion = "0.5.0"
-val appName = "tamboui-app"
+group = "jp.co.santa.soft"
+version = "1.0.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    // TamboUI snapshots are distributed via Sonatype Central Portal / OSSRH snapshots
+    maven {
+        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
+    maven {
+        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 
 dependencies {
-    // The BOM keeps all TamboUI modules on one version
+    // Quarkus BOM
+    implementation(enforcedPlatform("$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion"))
+
+    // TamboUI BOM (pinned to 0.7.0-SNAPSHOT per documentation)
     implementation(platform("dev.tamboui:tamboui-bom:$tambouiVersion"))
-    // Toolkit DSL (pulls in core, widgets, tui, CSS transitively)
+
+    // Quarkus Core, DI, YAML Config, and CLI entry point
+    implementation("io.quarkus:quarkus-arc")
+    implementation("io.quarkus:quarkus-picocli")
+    implementation("io.quarkus:quarkus-config-yaml")
+
+    // TamboUI Layers: Toolkit DSL, TuiRunner, Panama FFM Backend (Java 25), and TCSS
     implementation("dev.tamboui:tamboui-toolkit")
-    // A terminal backend is required at runtime.
-    implementation("dev.tamboui:tamboui-jline3-backend")
+    implementation("dev.tamboui:tamboui-tui")
+    implementation("dev.tamboui:tamboui-panama-backend")
+    implementation("dev.tamboui:tamboui-css")
+
+    // TamboUI Native Image & Action Binding Compile-Time Generation
+    implementation("dev.tamboui:tamboui-annotations")
+    annotationProcessor("dev.tamboui:tamboui-processor:$tambouiVersion")
+
+    // Testing (Quarkus JUnit 5 + TamboUI AssertJ buffer assertions)
+    testImplementation("io.quarkus:quarkus-junit")
+    testImplementation("org.assertj:assertj-core:4.0.0-M1")
 }
 
-application {
-    mainClass = "app.HelloTui"
-    // Terminal backends use native access; this avoids JDK 24+ warnings (JVM only)
-    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
-}
-
-tasks.withType<JavaCompile>().configureEach {
+tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
-    options.release = 25
+    options.compilerArgs.add("-parameters")
 }
 
-tasks.named<JavaExec>("run") {
-    // A TUI needs the real terminal's stdin, not Gradle's empty one
-    standardInput = System.`in`
+tasks.withType<Test> {
+    systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
-graalvmNative {
-    binaries {
-        named("main") {
-            imageName.set(appName)
-            mainClass.set("app.HelloTui")
+// Ensure interactive terminal execution works when running via Gradle/Quarkus
+tasks.quarkusDev {
+    jvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+}
 
-            javaLauncher.set(javaToolchains.launcherFor {
-                languageVersion = JavaLanguageVersion.of(25)
-                vendor = JvmVendorSpec.matching("GraalVM Community")
-            })
+// Check if native build is requested via -Pnative, -Dnative, -Dquarkus.package.type=native, or buildNative task
+val isNative =
+    project.hasProperty("native") ||
+        System.getProperty("native") != null ||
+        project.findProperty("quarkus.package.type") == "native" ||
+        System.getProperty("quarkus.package.type") == "native" ||
+        gradle.startParameter.taskNames.any { it.equals("buildNative", ignoreCase = true) }
 
-            // Uncomment while diagnosing a native build:
-            verbose.set(true)
-            buildArgs.addAll(
-                "--verbose",
-                "-H:+UnlockExperimentalVMOptions",
-                "-H:IncludeResources=.*\\.tcss$",
-                "-H:IncludeResources=.*\\.properties$",
-                "-H:IncludeResources=.*\\.caps$",
-                "-H:Log=registerResource:3",
-                "--enable-native-access=ALL-UNNAMED")
-        }
+// Configure GraalVM Native Image build based on -PnativePlatform=linux|windows
+quarkus {
+    if (isNative) {
+        quarkusBuildProperties.put("quarkus.native.enabled", "true")
+        quarkusBuildProperties.put("quarkus.package.jar.enabled", "false")
+        quarkusBuildProperties.put("quarkus.native.auto-service-loader-registration", "true")
     }
 
-    // Pull community-maintained reachability metadata for dependencies (JLine, ...)
-    metadataRepository {
-        enabled.set(true)
+    // Required by TamboUI Panama FFM backend and TamboUI JFR native image support
+    val nativeArgs =
+        mutableListOf(
+            "--enable-native-access=ALL-UNNAMED",
+            "--enable-monitoring=jfr",
+            "-H:+UnlockExperimentalVMOptions",
+            "-H:IncludeResources=.*\\.tcss$,META-INF/services/.*",
+            "--initialize-at-run-time=dev.tamboui.backend.panama",
+        )
+
+    if (nativePlatform.equals("windows", ignoreCase = true)) {
+        // Windows native build adjustments
+        nativeArgs.add("-Dquarkus.native.container-build=false")
+    } else {
+        // Default container runtime if container-build is requested
+        quarkusBuildProperties.put("quarkus.native.container-runtime", "docker")
+    }
+
+    quarkusBuildProperties.put(
+        "quarkus.native.additional-build-args",
+        nativeArgs.joinToString(","),
+    )
+}
+
+spotless {
+    java {
+        target("src/**/*.java")
+        googleJavaFormat()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    kotlinGradle {
+        target("*.gradle.kts")
+        ktlint()
+        trimTrailingWhitespace()
+        endWithNewline()
     }
 }

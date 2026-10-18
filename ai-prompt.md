@@ -1,137 +1,217 @@
-You are a senior Java architect with deep expertise in Quarkus, modern Java (25), and terminal user interface (TUI) frameworks. I need you to generate a complete, clean, and maintainable project skeleton for a TUI application built with **Java 25**, **Quarkus** (as the backend), and **TamboUI** (for the TUI layer).
+You are a senior Java architect with deep expertise in Quarkus, modern Java (25), Gradle Kotlin DSL, and terminal user interface (TUI) frameworks. I need you to generate a complete, clean, and maintainable **single-module** project skeleton for a TUI application built with **Java 25**, **Quarkus** (as the backend), and **TamboUI** (for the TUI layer).
+
+### 0. CRITICAL — Consult the TamboUI JavaDoc API First
+
+This project is being created inside a Gemini Notebook that already contains the **TamboUI JavaDoc API reference** as a source document.
+
+**Before you generate any code**, you MUST:
+1. **Read and analyze the TamboUI JavaDoc API** available in the Notebook's source documents.
+2. Use **only** classes, methods, annotations, and constructors that actually exist in that JavaDoc. Do NOT invent APIs, guess method names, or rely on memorized/assumed TamboUI signatures.
+3. If you are unsure whether an API exists, explicitly state so and either:
+   - Search the JavaDoc again, or
+   - Provide a clearly marked placeholder with a `// TODO: verify against TamboUI JavaDoc` comment.
+4. In your final output, include a short section titled **"TamboUI API References Used"** that lists each TamboUI class/interface used and where in the JavaDoc it was sourced from.
+
+Violating this rule (inventing APIs) is the single most important failure mode to avoid.
 
 ### 1. Project Overview
 
-Create a multi-module Quarkus project that:
+Create a **single-module** Gradle project that:
 - Uses **Java 25** as the target language level.
 - Uses **Quarkus** for dependency injection, configuration, lifecycle management, and backend services.
-- Uses **TamboUI** (dev.tamboui:* artifacts) to render an interactive, full-screen terminal UI.
-- Demonstrates a clean separation of concerns: the TUI layer should not contain business logic; the Quarkus backend should expose services that the TUI consumes.
+- Uses **TamboUI** to render an interactive, full-screen terminal UI.
+- Clearly separates concerns inside the module using packages (see §3): the TUI layer must not contain business logic; the Quarkus backend exposes services the TUI consumes.
 - Is structured for **maintainability, testability, and future extension**.
+- Produces **one runnable JAR** (JVM mode) and **one native binary** (GraalVM native-image mode).
 
 ### 2. Technical Stack & Constraints
 
-- **Java 25**: Leverage modern features where appropriate (records, sealed classes, pattern matching, virtual threads, etc.). Do not use preview features unless strictly necessary.
-- **Quarkus**: Use the latest stable Quarkus version compatible with Java 25. Use `quarkus-picocli` or `quarkus-aesh` for command-mode entry points if needed, but the primary entry point should launch the TamboUI terminal interface.
-- **TamboUI**: Use the `tamboui-toolkit` (declarative DSL) as the primary UI API, with `tamboui-tui` (TuiRunner) for the managed event loop. Use `tamboui-panama-backend` for the terminal backend (Java 25 native FFM support). Include `tamboui-css` for TCSS-based styling.
-- **Build Tool**: Gradle Include the OSSRH snapshots repository since TamboUI is currently distributed via snapshots.
-- **GraalVM**: The project must be compatible with GraalVM native-image compilation. Include the necessary Quarkus native profile and any TamboUI annotation processor configuration needed for native image compatibility.
+- **Java 25**: Leverage modern features (records, sealed classes, pattern matching, virtual threads) where appropriate. Do not use preview features unless strictly necessary.
+- **Quarkus**: Latest stable version compatible with Java 25. Use `quarkus-picocli` or `quarkus-aesh` for a command-mode entry point if needed, but the primary entry point must launch the TamboUI terminal interface.
+- **TamboUI**: Use `tamboui-toolkit` (declarative DSL) as the primary UI API, with `tamboui-tui` (TuiRunner) for the managed event loop. Use `tamboui-panama-backend` for the terminal backend (Java 25 FFM). Include `tamboui-css` for TCSS styling, and `tamboui-annotations` + `tamboui-processor` for native-image support.
+- **Build Tool**: **Gradle with Kotlin DSL (`build.gradle.kts` and `settings.gradle.kts`)**. Use the Gradle Wrapper. Prefer the `io.quarkus` Gradle plugin. Justify any non-obvious plugin or configuration choice in comments.
+- **Config File**: Use **`application.yaml`** (NOT `application.properties`) for Quarkus configuration. Ensure `quarkus-config-yaml` is included.
+- **Base Package**: `jp.co.santa.soft.vsmc` — all application code must live under this package (see §3 for sub-packages).
+- **Native Binary Priority**: The **primary** deliverable is a **Linux native binary** built with GraalVM. A Windows native binary is the **secondary** deliverable. JVM-mode JAR is a fallback for development.
+- **Cross-platform awareness**: Ensure the build is parameterized (Gradle `-PnativePlatform=linux|windows`) so the same `build.gradle.kts` can produce either target without modification. Document any platform-specific considerations.
 
-### 3. Project Structure
+### 3. Package Structure (Single Module)
 
-Generate a multi-module Gradle project with the following modules:
+Use a single Gradle module with package-based separation under the base package `jp.co.santa.soft.vsmc`:
 
-```
-project-root/
-├── pom.xml (parent POM with dependency management)
-├── app/ # Quarkus application entry point
-│ └── src/main/java/.../App.java
-│ └── src/main/resources/application.yaml
+```sh
+src/main/java/jp/co/santa/soft/tui/
+├── App.java # Quarkus main entry point
+├── config/ # Configuration mappings (@ConfigMapping), Quarkus producers
 ├── core/ # Domain logic & services (Quarkus beans)
-│ └── src/main/java/.../service/
-│ └── src/main/java/.../model/
-├── tui/ # TamboUI views, components, and event handling
-│ └── src/main/java/.../view/
-│ └── src/main/java/.../component/
-│ └── src/main/resources/tcss/ # TCSS stylesheets
-└── integration-tests/ # (Optional) Integration tests
+│ ├── model/ # Records, sealed types, domain models
+│ └── service/ # @ApplicationScoped services
+├── tui/ # TamboUI views, components, event handling
+│ ├── view/ # Screens / top-level views
+│ ├── component/ # Reusable UI components
+│ └── support/ # TUI helpers (navigation, theming, key bindings)
+
+src/main/resources/
+├── application.yaml # Quarkus config
+└── tcss/ # TamboUI TCSS stylesheets
+
+src/nativeTest/java/ # (Optional) native-mode smoke test
 ```
 
 
-Explain the purpose of each module and the dependency direction (e.g., `app` depends on `tui` and `core`; `tui` depends on `core`; `core` has no UI dependencies).
+Explain the purpose of each package and the dependency direction:
+- `App` → depends on `tui` and `config`
+- `tui` → depends on `core` and `config`
+- `core` → no UI dependencies
+- `config` → may depend on `core` for types, but not on `tui`
 
-### 4. Dependencies (Maven Example **BUT** use Gradle for build tools)
+### 4. Gradle Kotlin DSL Build
 
-Provide the full `<dependencyManagement>` and `<dependencies>` sections for the parent POM. Include:
+Provide the complete `settings.gradle.kts` and `build.gradle.kts`. Include:
 
-- Quarkus BOM (latest compatible with Java 25).
-- `quarkus-arc` (CDI)
-- `quarkus-picocli` (or `quarkus-aesh` if more appropriate)
-- `tamboui-toolkit`
-- `tamboui-tui`
-- `tamboui-panama-backend`
-- `tamboui-css`
-- `tamboui-annotations` + `tamboui-processor` (for native image)
-  - required `reflect-config.json` entries file
-- `quarkus-junit5` (test scope)
-- Any other necessary artifacts.
+- The Gradle Wrapper version compatible with Java 25.
+- The `io.quarkus` Gradle plugin with the correct version.
+- Dependency declarations for:
+  - Quarkus BOM (via `enforcedPlatform`)
+  - `quarkus-arc`
+  - `quarkus-picocli` (or `quarkus-aesh`)
+  - `quarkus-config-yaml`
+  - `tamboui-toolkit`
+  - `tamboui-tui`
+  - `tamboui-panama-backend`
+  - `tamboui-css`
+  - `tamboui-annotations` + `annotationProcessor("...:tamboui-processor")`
+  - `quarkus-junit5` (test scope)
+- The **OSSRH snapshot repository** (`https://s01.oss.sonatype.org/content/repositories/snapshots/`) since TamboUI is distributed via snapshots. Pin a specific snapshot version.
+- The Quarkus `native` profile tasks, including any `native-image` arguments required by the TamboUI Panama backend (e.g., `--enable-native-access=ALL-UNNAMED`).
+- A Gradle property `nativePlatform` (default `linux`) that toggles native-image target between `linux-amd64` and `windows-amd64`. Document how to override with `-PnativePlatform=windows`.
+- JVM args for the `run` task: `--enable-native-access=ALL-UNNAMED --enable-preview` (only if preview features are genuinely needed; otherwise omit `--enable-preview`).
+- Gradle toolchain configuration to enforce Java 25.
+- Install/Setup for auto-formatting with Spotless Gradle plugin and use "Google Java Coding Style", if it's available use the style that fit with Modern Java or Java 25 compatible.
 
-Include the OSSRH snapshot repository configuration.
+### 5. Configuration (`application.yaml`)
 
-### 5. Configuration
+Provide `src/main/resources/application.yaml` including:
+- Disabling the HTTP server (this is a CLI/TUI app):
+  ```yaml
+  quarkus:
+    http:
+      host-enabled: false
+  ```
 
-Provide the `application.yaml` for Quarkus. Include:
-- Disabling the HTTP server (since this is a CLI/TUI app, not a web app).
-- Any TamboUI-specific configuration (e.g., backend selection, theme).
-- Logging configuration suitable for a TUI (avoid logging to stdout/stderr that would corrupt the terminal display; use file-based logging or a Quarkus console handler that respects the TUI).
+- Logging that does **not** write to stdout/stderr (which would corrupt the TUI). Route logs to a file (e.g., `./logs/tui.log`) or configure the Quarkus console handler to be TUI-safe.
+- TamboUI-specific configuration under a `tamboui:` root key (e.g., default backend, theme name) using `@ConfigMapping` in `config/`.
+- Any Quarkus native-image settings.
 
 ### 6. TUI Layer Design
 
-Provide a concrete example of a TamboUI view using the Toolkit DSL. The example should:
-- Use `ToolkitRunner` (or `TuiRunner`) to manage the event loop.
-- Define a simple but realistic screen: e.g., a main menu with a list of options, a detail pane, and a status bar.
-- Use TCSS for styling (provide the `.tcss` file content).
-- Demonstrate event handling (key bindings for navigation, quit, etc.).
-- Use `@OnAction` annotations if appropriate for action handling.
-- Show how the TUI obtains data from a Quarkus service (inject the service into the view or a controller).
+Provide a concrete example of a TamboUI view using the Toolkit DSL. The example must:
 
-Explain the pattern for adding new screens/views and how to handle navigation between them.
+- Use the managed event loop (ToolkitRunner / TuiRunner — whichever the JavaDoc confirms).
+- Define a realistic screen: a main menu with a list, a detail pane, and a status bar.
+- Use TCSS for styling (provide the `.tcss` content).
+- Demonstrate key bindings for navigation and quit.
+- Show how the TUI obtains data from a Quarkus service (injection into a controller/presenter, not directly into the view if the JavaDoc encourages that pattern).
+- Explain the pattern for adding new screens and handling navigation.
 
-### 7. Backend Services (Core Module)
+**All API usages must be traced to the TamboUI JavaDoc.**
+
+### 7. Backend Services (Core Package)
 
 Provide one or two example Quarkus services (e.g., `GreetingService`, `DataService`) that:
+
 - Are CDI beans (`@ApplicationScoped`).
 - Contain pure business logic (no TUI dependencies).
-- Are consumed by the TUI layer via constructor injection or method parameters.
-
-Show how to wire the service into the TUI view.
+- Are consumed by the TUI layer via CDI injection.
+- Use Java 25 features (records, sealed interfaces) where they improve clarity.
 
 ### 8. Build & Run
 
-Provide:
-- Gradle (kts) build commands for JVM mode and native mode.
-- The command to run the TUI application (including the necessary `--enable-native-access=ALL-UNNAMED` flag for the Panama backend).
-- Any JBang one-liner for quick testing, if applicable.
+Provide exact commands for:
+
+**Linux (primary):**
+
+```sh
+./gradlew clean build
+./gradlew quarkusBuild --native -Dquarkus.native.container-build=true -PnativePlatform=linux
+./build/*-runner
+```
+
+**Windows (secondary):**
+
+```sh
+.\gradlew.bat clean build
+.\gradlew.bat quarkusBuild --native -PnativePlatform=windows
+.\build\*-runner.exe
+```
+
+**JVM mode (fallback / dev):**
+
+```sh
+./gradlew quarkusDev
+# or
+java --enable-native-access=ALL-UNNAMED -jar build/quarkus-app/quarkus-run.jar
+```
+
+Also provide:
+
 - Notes on running the TUI inside a real terminal (not an IDE console) to avoid "dumb terminal" fallback.
+- Notes on `--enable-native-access=ALL-UNNAMED` (required by the Panama backend).
+- If applicable, a JBang one-liner for quick experiments.
 
 ### 9. Testing Strategy
 
 Provide:
-- A unit test for the core service (using JUnit 5 + Mockito or Quarkus test framework).
-- A suggestion for testing the TUI layer (e.g., using TamboUI's `core-assertj` for buffer comparison, or snapshot testing).
-- Any integration test example.
+
+- A unit test for a core service using JUnit 5 + Quarkus test framework.
+- A suggestion for TUI testing (TamboUI `core-assertj` buffer comparison or snapshot tests), based on the JavaDoc.
+- A note on how to run the native smoke test (`./gradlew nativeTest`).
 
 ### 10. Best Practices & Conventions
 
-Include a section on:
-- Package naming conventions - root package name is `jp.co.santa.soft.tui`
-- How to keep the TUI layer thin (view models, presenters, or controllers).
-- How to handle asynchronous operations (e.g., virtual threads or Quarkus `@Blocking`).
-- How to manage state in an immediate-mode TUI without creating spaghetti code.
-- How to structure TCSS files for theming.
-- How to prepare for GraalVM native image (reflection config, annotation processors).
-- Including Spotless Gradle Plugin and configure style to use Java Google Style.
+Include a section covering:
+
+- Package conventions under `jp.co.santa.soft.vsmc`.
+- Keeping the TUI layer thin (presenters/view models if TamboUI supports them).
+- Asynchronous operations (virtual threads, `@Blocking`, `@RunOnVirtualThread`).
+- Managing state in an immediate-mode TUI without spaghetti code.
+- Structuring TCSS files for theming.
+- GraalVM native-image preparation (reflection config, annotation processors, reachability metadata).
+- Cross-platform considerations for Linux vs Windows native builds (terminal capabilities, ANSI support, path handling).
+- Always format the codes with Spotless Gradle plugin
 
 ### 11. Deliverables
 
-Provide the complete source code for:
-- Parent `build.gradle.kts`
-- Each module's Gradle's files (if have or needed)
+Provide complete, syntactically correct source code and configuration for:
+
+- `settings.gradle.kts`
+- `build.gradle.kts`
+- `gradle.properties` (if needed)
+- `gradle/wrapper/gradle-wrapper.properties`
 - `App.java` (Quarkus main entry point)
-- One example TUI view (with Toolkit DSL)
+- One example TUI view (Toolkit DSL) + one reusable component
 - One example TCSS file
 - One example core service
 - `application.yaml`
-- A `README.md` explaining how to build, run, and extend the project.
+- A `README.md` explaining how to build, run, and extend the project on both Linux (primary) and Windows (secondary)
 
-Ensure all code is syntactically correct, uses modern Java idioms, and follows Quarkus and TamboUI best practices. Include comments where the logic is non-obvious.
+### 12. TamboUI API References Used (mandatory closing section)
 
-### 12. Additional Notes
+End your response with a section that lists:
 
-- **IMPORTANT** when coding, go check find the actually existing resources that related TamboUI before proceeding on solutions and coding.
-- TamboUI is experimental; pin a specific snapshot version and note that APIs may change.
-- If Quarkus has a dedicated TamboUI extension, use it; otherwise, use the raw TamboUI artifacts.
-- Avoid any HTTP server dependencies unless explicitly required.
-- The final project should be runnable with native binary as first priority and `java -jar` (JVM mode) as alternative runnable method.
+- Every TamboUI class/interface/annotation used in the generated code.
+- A short quote or paraphrase of its purpose, sourced from the JavaDoc in the Notebook.
+- Any API you were unable to verify and therefore marked with `// TODO: verify against TamboUI JavaDoc`.
 
-Generate the complete project now.
+### 13. Additional Notes
+
+TamboUI is experimental. Pin a specific snapshot version and note that APIs may change.
+
+- If Quarkus provides a dedicated TamboUI extension, use it; otherwise use raw TamboUI artifacts.
+- Do not add HTTP server dependencies unless explicitly required.
+- The final project must be runnable as:
+  - A JVM-mode JAR: `java --enable-native-access=ALL-UNNAMED -jar build/quarkus-app/quarkus-run.jar`
+  - A Linux native binary: `./build/*-runner`
+  - A Windows native binary: `.\build\*-runner.exe`
+
+Generate the complete single-module Gradle (Kotlin DSL) project now, following every constraint above.

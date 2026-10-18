@@ -1,0 +1,48 @@
+quarkus:
+  application:
+    name: santa-soft-tui
+  # Suppress Quarkus ASCII banner so it does not flash or corrupt the alternate screen
+  banner:
+    enabled: false
+
+  # Route all logs to a rolling file; disable stdout console logging to protect TamboUI buffer rendering
+  log:
+    console:
+      enabled: false
+    file:
+      enabled: true
+      path: ./logs/tui.log
+      level: INFO
+      format: "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{3.}] (%t) %s%e%n"
+    category:
+      "jp.co.santa.soft":
+        level: DEBUG
+
+  # Keep CDI beans referenced dynamically by TUI views from being pruned at build time
+  arc:
+    remove-unused-beans: fwk
+
+  # Native Image configuration
+  native:
+    auto-service-loader-registration: true
+    resources:
+      includes:
+        - "META-INF/services/**"
+        - "tcss/**"
+        - "**/*.tcss"
+
+# Custom TamboUI Configuration mapped via @ConfigMapping
+tamboui:
+  backend: panama
+  theme-path: /tcss/default.tcss
+  mouse-capture: true
+  tick-rate-ms: 50
+
+"%test":
+  quarkus:
+    log:
+      console:
+        enabled: true
+      file:
+        enabled: false
+

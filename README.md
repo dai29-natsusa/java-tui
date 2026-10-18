@@ -1,46 +1,63 @@
-# tamboui-app
+# Santa Soft TUI (`jp.co.santa.soft.tui`)
 
-TamboUI (Toolkit DSL) starter. Java 25, Gradle Kotlin DSL.
+A full-screen Terminal User Interface (TUI) application built with **Java 25**, **Quarkus**, and **TamboUI (`0.7.0-SNAPSHOT`)**.
 
-## JVM
+## Prerequisites
 
-```bash
-./gradlew installDist
-./build/install/tamboui-app/bin/tamboui-app     # run from a real terminal
-./gradlew run                                   # may not get a real TTY (see notes)
+- **Java 25** (JDK 25 or GraalVM for JDK 25)
+- **Docker / Podman** (if building Linux native binaries via container)
+- A real terminal emulator (e.g., Kitty, WezTerm, Alacritty, GNOME Terminal, or Windows Terminal)
+
+---
+
+## Build & Run Commands
+
+### 1. Linux (Primary Deliverable)
+
+```sh
+# Compile and run unit tests
+./gradlew clean build
+
+# Build GraalVM native executable (Linux amd64 via container)
+./gradlew quarkusBuild -Pnative -Dquarkus.native.container-build=true -PnativePlatform=linux
+
+# Or build locally using your installed GraalVM 25 (faster, no Docker needed):
+./gradlew quarkusBuild -Pnative
+
+# Run the native binary in your terminal
+./build/*-runner
 ```
 
-## Native binary (GraalVM)
+## Project Structure
 
-```bash
-./gradlew nativeCompile
-./build/native/nativeCompile/tamboui-app        # tamboui-app.exe on Windows
+```txt
+src/main/java/jp/co/santa/soft/
+├── App.java                           # Quarkus main entry point (@QuarkusMain / Picocli)
+└── tui/
+    ├── config/
+    │   └── TamboUiConfig.java         # @ConfigMapping for tamboui.* properties
+    ├── core/
+    │   ├── model/
+    │   │   └── SystemTask.java        # Java 25 records & sealed interfaces
+    │   └── service/
+    │       └── SystemTaskService.java # Pure business logic (@ApplicationScoped)
+    ├── component/
+    │   └── StatusBarComponent.java    # Reusable TamboUI Toolkit Element factory
+    ├── support/
+    │   └── TuiPresenter.java          # Bridges CDI services and TamboUI state
+    └── view/
+        └── MainDashboardView.java     # Top-level screen using ToolkitRunner & Toolkit DSL
+
+src/main/resources/
+├── application.yaml                   # TUI-safe Quarkus & TamboUI configuration
+└── tcss/
+    └── default.tcss                   # TamboUI CSS stylesheet
+
+src/test/java/jp/co/santa/soft/tui/
+└── core/service/
+    └── SystemTaskServiceTest.java     # Quarkus JUnit 5 service & buffer test
+
+src/nativeTest/java/jp/co/santa/soft/tui/
+└── NativeAppIT.java                   # GraalVM native-image smoke test
 ```
 
-Native images cannot be cross-compiled. Build on each target OS/CPU (see `.github/workflows/native.yml`).
-
-### Prerequisites per OS
-
-| OS      | Needs                                                                                                   |
-|---------|---------------------------------------------------------------------------------------------------------|
-| Linux   | `build-essential zlib1g-dev` (or distro equivalent)                                                     |
-| macOS   | Xcode command line tools: `xcode-select --install`                                                      |
-| Windows | Visual Studio Build Tools, "Desktop development with C++" workload; run from an x64 Native Tools prompt |
-
-The GraalVM JDK itself is fetched by Gradle's toolchain support (Foojay) on first build.
-
-### If the native binary fails at runtime
-
-1. See which dependencies lack reachability metadata:
-   `./gradlew listLibrariesMissingMetadata`
-2. Record metadata by exercising the app on the JVM with the tracing agent (use the installed launcher so you have a
-   real terminal):
-
-   ```bash
-   ./gradlew installDist
-   JAVA_OPTS="-agentlib:native-image-agent=config-merge-dir=src/main/resources/META-INF/native-image/app/tamboui-app" \
-     ./build/install/tamboui-app/bin/tamboui-app
-   ```
-
-   Run the JVM from a GraalVM 25 JDK (`JAVA_HOME`), use every feature of the app, quit,
-   then rebuild with `./gradlew nativeCompile`.
