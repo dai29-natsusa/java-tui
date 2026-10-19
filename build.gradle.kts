@@ -133,4 +133,8 @@ spotless {
         trimTrailingWhitespace()
         endWithNewline()
     }
+    format("yaml") {
+        target("**/*.yaml", "**/*.yml")
+        prettier()
+    }
 }

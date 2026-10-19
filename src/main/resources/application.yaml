@@ -37,12 +37,3 @@ tamboui:
   theme-path: /tcss/default.tcss
   mouse-capture: true
   tick-rate-ms: 50
-
-"%test":
-  quarkus:
-    log:
-      console:
-        enabled: true
-      file:
-        enabled: false
-

@@ -1,0 +1,7 @@
+"%test":
+  quarkus:
+    log:
+      console:
+        enabled: true
+      file:
+        enabled: false
