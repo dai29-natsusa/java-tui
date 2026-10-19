@@ -4,33 +4,26 @@ vsmc:
     id: 1
     name: "xmcs1"
     users:
-    - user:
-        username: "xmcs"
-        password: "${XMCS_PW}"
-    - user:
-        username: "oracle"
-        password: "${ORACLE_PW}"
-    - user:
-        username: "root"
-        password: "${ROOT_PW}"
+    - username: "xmcs"
+      password: "${XMCS_PW}"
+    - username: "oracle"
+      password: "${ORACLE_PW}"
+    - username: "root"
+      password: "${ROOT_PW}"
     ip: "192.168.40.1"
     services:
-    - service:
-        id: 1
-        name: "oracle"
-        pid: 999
+    - id: 1
+      name: "oracle"
+      pid: 999
     hostname: "ol8xmcs1"
     workdir: "/home/xmcs/XMCS"
     instances:
-    - instance:
-        name: "xmcs_server"
-        pid: 999
-        location: "${vsmc.unit.workdir}/xmcs_server/scripts/core.sh"
-    - instance:
-        name: "amps_emulator"
-        pid: 888
-        location: "${vsmc.unit.workdir}/amhs_emulator/scripts/emu.sh"
-    - instance:
-        name: "xmcs-monitor"
-        pid: 777
-        location: "${vsmc.unit.workdir}/xmcs-monitor/scripts/monitor.sh"
+    - name: "xmcs_server"
+      pid: 999
+      location: "${vsmc.unit.workdir}/xmcs_server/scripts/core.sh"
+    - name: "amps_emulator"
+      pid: 888
+      location: "${vsmc.unit.workdir}/amhs_emulator/scripts/emu.sh"
+    - name: "xmcs-monitor"
+      pid: 777
+      location: "${vsmc.unit.workdir}/xmcs-monitor/scripts/monitor.sh"

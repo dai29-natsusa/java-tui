@@ -1,6 +1,7 @@
 package jp.co.santa.soft.tui.config;
 
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.Secret;
 import io.smallrye.config.WithDefault;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface UnitConfig {
   interface User {
     String username();
 
-    String password();
+    Secret<String> password();
   }
 
   interface Service {
