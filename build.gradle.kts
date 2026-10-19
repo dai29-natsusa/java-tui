@@ -133,4 +133,14 @@ spotless {
         trimTrailingWhitespace()
         endWithNewline()
     }
+    yaml {
+        target("**/*.yaml", "**/*.yml")
+        targetExclude("bin/**", "build/**")
+        jackson()
+    }
+    json {
+        target("**/*.json")
+        targetExclude("bin/**", "build/**")
+        jackson()
+    }
 }

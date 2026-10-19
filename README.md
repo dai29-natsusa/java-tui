@@ -1,4 +1,4 @@
-# Santa Soft TUI (`jp.co.santa.soft.tui`)
+# Santa Soft TUI (`jp.co.santa.soft`)
 
 A full-screen Terminal User Interface (TUI) application built with **Java 25**, **Quarkus**, and **TamboUI (`0.7.0-SNAPSHOT`)**.
 

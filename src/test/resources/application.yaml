@@ -1,0 +1,10 @@
+---
+'%test':
+  quarkus:
+    log:
+      console:
+        enabled: true
+      file:
+        enabled: false
+    config:
+      locations: "./config/unit.yaml"
