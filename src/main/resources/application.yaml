@@ -4,6 +4,8 @@ quarkus:
     name: "santa-soft-tui"
   banner:
     enabled: false
+  config:
+    locations: "file:config/unit.yaml"
   log:
     console:
       enabled: false
