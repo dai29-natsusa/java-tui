@@ -6,4 +6,5 @@ out/
 logs/
 bin/
 *.log
-.env
+*.env
+!example.env

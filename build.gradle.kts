@@ -143,4 +143,8 @@ spotless {
         targetExclude("bin/**", "build/**")
         jackson()
     }
+    flexmark {
+        target("**/*.md")
+        targetExclude("bin/**", "build/**")
+    }
 }
