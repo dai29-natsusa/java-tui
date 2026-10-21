@@ -6,6 +6,15 @@ unit:
   ip: "192.168.40.1"
   hostname: "ol8xmcs1"
   workdir: "/home/xmcs/XMCS"
+  memory: |
+    # module, xms,  xms
+    CACHE,    512, 2048
+    CORE,     512, 1024
+    CLIENT,   512, 2048
+    AMHS,     128,  256
+    HOST,     128,  256
+    MONITOR,  512, 1024
+    LAYOUT,   256,  256
   users:
   - username: "xmcs"
     password: "${RUNNER_PW}"
