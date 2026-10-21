@@ -35,17 +35,17 @@
     1. Can confirm success of load `.dmp` files
     1. Can create DB Link
     1. Can run/execute 'Procedure' on specific name 'SP_DEL_INS_PART' with specific PARAM['W_FORCE_EDITION'] = 'SE' and need to confirm that execution result is OK
-1. With Executor User - can do Deployment and execute many functions/scripts to setup the server to run target application (xMCS - server/emulator/monitor)
+1. With Executor User - can do Deployment and execute many functions/scripts to set up the server to run target application (xMCS - server/emulator/monitor)
     1. Can check and confirm installation of JDK8 -> error or exit when confirmation failed
     1. Can edit or auto-edit the specific properties in `jdbc.properties` file -> `xmcs.db.hostname`, `xmcs.db.user`, `xmcs.db.passwd`
-    1. Can edit or auto-edit the specific properties in `jdbc-history.properties` file -> `xmcs.db.hostname`, `xmcs.db.user`, `xmcs.db.passwd` (same properties' name with above but difference DB's user that intiated from when executed DB users init)
+    1. Can edit or auto-edit the specific properties in `jdbc-history.properties` file -> `xmcs.db.hostname`, `xmcs.db.user`, `xmcs.db.passwd` (same properties' name with above but difference DB's user that initiated from when executed DB users init)
     1. Can edit or auto-edit the specific properties in `xmcs-nodes.properties` file -> `xmcs.node.ip.1={unit01_ip}:5701`, `xmcs.node.ip.2={unit02_ip}:5701`, `xmcs.node.port.auto.increment=false`
-    1. Can edit or auto-edit the specific shell script in `xmcscommon.sh` file -> `DEF_BIND_ADDR={unitxx_alias_or_hostname}`, `JG_BIND_ADDR={unitxx_alias_or_hostname}` (**xx** is depends on unit id)
+    1. Can edit or auto-edit the specific shell script in `xmcscommon.sh` file -> `DEF_BIND_ADDR={unitxx_alias_or_hostname}`, `JG_BIND_ADDR={unitxx_alias_or_hostname}` (**xx** is depending on unit id)
     1. Can edit or auto-edit the specific shell script in `amsh.sh` file -> `HSMS_LOCAL_BIND_ADDR={unit01_ip}`
     1. Can edit or auto-edit the specific shell script in `client.sh` file -> `BIND_ADDR={unit01_ip}`
     1. Can edit or auto-edit the specific shell script in `core.sh` file -> `JAVA_OPTS=${JAVA_OPTS} -Dxmcs.core.hazelcast.type=client -Dxmcs.event.log.union=true`
     1. Can edit or auto-edit the specific shell script in `check-if.sh` file -> `${XMCS_MONITOR}/scripts/xmcs-monitor.sh status`
-    1. **ONLY Unit02** Can edit or auto-edit the specific shell script in `amsh.sh`, `client-if.sh`, `core.sh`, `cache.sh`, `host-if.sh`, `layout-man.sh` for set `MODULE_ID={MODULE}_2` (`MODULE` is depends on shell files name like `client-if.sh`=>`MODULE='CLIENT-IF'`)
+    1. **ONLY Unit02** Can edit or auto-edit the specific shell script in `amsh.sh`, `client-if.sh`, `core.sh`, `cache.sh`, `host-if.sh`, `layout-man.sh` for set `MODULE_ID={MODULE}_2` (`MODULE` is depending on shell files name like `client-if.sh`=>`MODULE='CLIENT-IF'`)
     1. Can edit or auto-edit the specific shell script in `amsh.sh`, `client-if.sh`, `core.sh`, `cache.sh`, `host-if.sh`, `layout-man.sh` -> `MEM_MIN` and `MEM_MAX` as following table
         
         | Module  | Min  | Max   |
@@ -66,4 +66,4 @@
     1. Can run/execute scripts `startAll.sh`, `check-if.sh`, `stopAll.sh`
 1. Can use `root` user to register service
     1. 
-1. **Optional** App can read `.env` file when running and tread variables inside as Environment Variable, or App can register like `export VAR_NAME={value}` with reading `.env` file and do export each variables
+1. **Optional** App can read `.env` file when running and tread variables inside as Environment Variable, or App can register like `export VAR_NAME={value}` with reading `.env` file and do export each variable
