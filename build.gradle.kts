@@ -136,7 +136,10 @@ spotless {
     yaml {
         target("**/*.yaml", "**/*.yml")
         targetExclude("bin/**", "build/**")
-        jackson()
+        toggleOffOn()
+        leadingTabsToSpaces(2)
+        trimTrailingWhitespace()
+        endWithNewline()
     }
     json {
         target("**/*.json")

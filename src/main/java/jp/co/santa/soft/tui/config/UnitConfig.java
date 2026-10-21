@@ -2,9 +2,12 @@ package jp.co.santa.soft.tui.config;
 
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.Secret;
+import io.smallrye.config.WithConverter;
 import io.smallrye.config.WithDefault;
 import java.util.List;
 import java.util.Optional;
+import jp.co.santa.soft.tui.config.converter.HeapConfig;
+import jp.co.santa.soft.tui.config.converter.HeapMatrixConverter;
 
 @ConfigMapping(prefix = "unit")
 public interface UnitConfig {
@@ -31,6 +34,9 @@ public interface UnitConfig {
   List<Service> services();
 
   List<Instance> instances();
+
+  @WithConverter(HeapMatrixConverter.class)
+  HeapConfig[] memory();
 
   interface User {
     String username();

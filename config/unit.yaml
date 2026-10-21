@@ -6,6 +6,7 @@ unit:
   ip: "192.168.40.1"
   hostname: "ol8xmcs1"
   workdir: "/home/xmcs/XMCS"
+  # spotless:off
   memory: |
     # module, xms,  xms
     CACHE,    512, 2048
@@ -15,6 +16,7 @@ unit:
     HOST,     128,  256
     MONITOR,  512, 1024
     LAYOUT,   256,  256
+  # spotless:on
   users:
   - username: "xmcs"
     password: "${RUNNER_PW}"

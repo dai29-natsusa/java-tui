@@ -21,6 +21,7 @@ class UnitConfigTest {
     assertEquals("192.168.40.1", unitConfig.ip());
     assertEquals("ol8xmcs1", unitConfig.hostname());
     assertEquals("/home/xmcs/XMCS", unitConfig.workdir());
+    assertEquals(7, unitConfig.memory().length);
 
     assertEquals(3, unitConfig.users().size());
     assertEquals("xmcs", unitConfig.users().getFirst().username());
