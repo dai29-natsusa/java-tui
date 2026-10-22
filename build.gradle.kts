@@ -48,6 +48,9 @@ dependencies {
     implementation("io.quarkus:quarkus-arc")
     implementation("io.quarkus:quarkus-picocli")
     implementation("io.quarkus:quarkus-config-yaml")
+    implementation("io.quarkiverse.sshd:quarkus-sshd:1.2.0")
+    // Apache SSHD
+    implementation("org.apache.sshd:sshd-scp:2.20.0")
 
     // TamboUI Layers: Toolkit DSL, TuiRunner, Panama FFM Backend (Java 25), and TCSS
     implementation("dev.tamboui:tamboui-toolkit")

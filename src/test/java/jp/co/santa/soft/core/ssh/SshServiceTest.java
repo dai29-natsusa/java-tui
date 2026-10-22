@@ -28,16 +28,15 @@ class SshServiceTest {
   }
 
   @Test
-  public void givenPathAndComment_whenGenerateSshKeys_thenFoundKeyFilesOnGivenPath()
-      throws IOException {
+  void givenPathAndComment_whenGenerateSshKeys_thenFoundKeyFilesOnGivenPath() throws IOException {
     await()
         .atMost(Duration.of(5, SECONDS))
         .pollInterval(Duration.of(100, MILLIS))
         .until(() -> Files.notExists(Paths.get(storeKeyFilesPath)));
 
-    assertDoesNotThrow(() -> sshService.generateSshKeys(storeKeyFilesPath, "testing"));
-    Path pathPri = Path.of(storeKeyFilesPath);
-    Path pathPub = Path.of(storeKeyFilesPath + ".pub");
+    Path pathPri = Paths.get(storeKeyFilesPath);
+    Path pathPub = Paths.get(storeKeyFilesPath + ".pub");
+    assertDoesNotThrow(() -> sshService.generateSshKeys(pathPri, "testing"));
     assertTrue(pathPri.toFile().exists());
     assertTrue(pathPub.toFile().exists());
     assertTrue(Files.readString(pathPub).trim().startsWith("ssh-ed25519"));
@@ -45,18 +44,47 @@ class SshServiceTest {
   }
 
   @Test
-  public void givenPathAndCommentNull_whenGenerateSshKeys_thenStillFoundKeyFilesOnGivenPath()
-          throws IOException {
+  void givenPathAndCommentNull_whenGenerateSshKeys_thenStillFoundKeyFilesOnGivenPath()
+      throws IOException {
     await()
-            .atMost(Duration.of(5, SECONDS))
-            .pollInterval(Duration.of(100, MILLIS))
-            .until(() -> Files.notExists(Paths.get(storeKeyFilesPath)));
+        .atMost(Duration.of(5, SECONDS))
+        .pollInterval(Duration.of(100, MILLIS))
+        .until(() -> Files.notExists(Paths.get(storeKeyFilesPath)));
 
-    assertDoesNotThrow(() -> sshService.generateSshKeys(storeKeyFilesPath, null));
     Path pathPri = Path.of(storeKeyFilesPath);
     Path pathPub = Path.of(storeKeyFilesPath + ".pub");
+    assertDoesNotThrow(() -> sshService.generateSshKeys(pathPri, null));
     assertTrue(pathPri.toFile().exists());
     assertTrue(pathPub.toFile().exists());
     assertTrue(Files.readString(pathPub).trim().startsWith("ssh-ed25519"));
+  }
+
+  @Test
+  void given_when_then() {
+    Path privatePath = Path.of(storeKeyFilesPath);
+    Path publicPath = Path.of(storeKeyFilesPath + ".pub");
+    String privateKey =
+        """
+    -----BEGIN PRIVATE KEY-----
+    MC4CAQ_With_Dummy
+    -----END PRIVATE KEY-----
+    """;
+    String publicKey =
+        """
+    ssh-ed25519 AAAAC3_With_Dummy testing
+    """;
+
+    try {
+      Files.writeString(privatePath, privateKey);
+      Files.writeString(publicPath, publicKey);
+    } catch (IOException _) {
+    }
+
+    await()
+        .atMost(Duration.of(5, SECONDS))
+        .pollInterval(Duration.of(100, MILLIS))
+        .until(() -> Files.exists(Paths.get(storeKeyFilesPath)));
+
+    assertDoesNotThrow(() -> sshService.generateSshKeys(Paths.get(storeKeyFilesPath), "testing"));
   }
 }
