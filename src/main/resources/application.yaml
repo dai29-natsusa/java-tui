@@ -5,7 +5,7 @@ quarkus:
   banner:
     enabled: false
   config:
-    locations: "./config/unit.yaml"
+    locations: "./config/"
   log:
     console:
       enabled: false

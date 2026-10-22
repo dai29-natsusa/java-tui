@@ -7,4 +7,4 @@
       file:
         enabled: false
     config:
-      locations: "./config/unit.yaml"
+      locations: "./config/"

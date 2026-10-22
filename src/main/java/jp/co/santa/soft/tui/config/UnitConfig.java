@@ -5,6 +5,7 @@ import io.smallrye.config.Secret;
 import io.smallrye.config.WithConverter;
 import io.smallrye.config.WithDefault;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import jp.co.santa.soft.tui.config.converter.HeapConfig;
 import jp.co.santa.soft.tui.config.converter.HeapMatrixConverter;
@@ -12,31 +13,35 @@ import jp.co.santa.soft.tui.config.converter.HeapMatrixConverter;
 @ConfigMapping(prefix = "unit")
 public interface UnitConfig {
 
-  Optional<String> project();
+  Map<String, Unit> units();
 
-  @WithDefault("0")
-  int id();
+  interface Unit {
+    Optional<String> project();
 
-  @WithDefault("unit0")
-  String name();
+    @WithDefault("0")
+    int id();
 
-  @WithDefault("192.168.10.10")
-  String ip();
+    @WithDefault("unit0")
+    String name();
 
-  @WithDefault("ol8unit0")
-  String hostname();
+    @WithDefault("192.168.10.10")
+    String ip();
 
-  @WithDefault("/home/unit/WORKDIR")
-  String workdir();
+    @WithDefault("ol8unit0")
+    String hostname();
 
-  List<User> users();
+    @WithDefault("/home/unit/WORKDIR")
+    String workdir();
 
-  List<Service> services();
+    List<User> users();
 
-  List<Instance> instances();
+    List<Service> services();
 
-  @WithConverter(HeapMatrixConverter.class)
-  HeapConfig[] memory();
+    List<Instance> instances();
+
+    @WithConverter(HeapMatrixConverter.class)
+    HeapConfig[] memory();
+  }
 
   interface User {
     String username();

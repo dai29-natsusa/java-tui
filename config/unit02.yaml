@@ -1,0 +1,43 @@
+---
+unit:
+  units:
+    unit02:
+      project: "vsmc"
+      id: 2
+      name: "xmcs2"
+      ip: "192.168.40.2"
+      hostname: "ol8xmcs2"
+      workdir: "/home/xmcs/XMCS"
+      # spotless:off
+      memory: |
+        # module, xms,  xms
+        CACHE,    512, 2048
+        CORE,     512, 1024
+        CLIENT,   512, 2048
+        AMHS,     128,  256
+        HOST,     128,  256
+        MONITOR,  512, 1024
+        LAYOUT,   256,  256
+      # spotless:on
+      users:
+      - username: "xmcs"
+        password: "${RUNNER_PW}"
+        user-id: -1
+        group-id: -1
+      - username: "oracle"
+        password: "${ORACLE_PW}"
+        user-id: -1
+        group-id: -1
+      - username: "root"
+        password: "${ROOT_PW}"
+      services:
+      - id: 1
+        name: "oracle"
+        pid: 999
+      instances:
+      - name: "xmcs_server"
+        pid: 999
+        location: "${unit.units.unit02.workdir}/xmcs_server/scripts/core.sh"
+      - name: "xmcs-monitor"
+        pid: 777
+        location: "${unit.units.unit02.workdir}/xmcs-monitor/scripts/monitor.sh"
