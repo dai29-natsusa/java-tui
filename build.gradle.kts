@@ -62,6 +62,7 @@ dependencies {
     // Testing (Quarkus JUnit 5 + TamboUI AssertJ buffer assertions)
     testImplementation("io.quarkus:quarkus-junit")
     testImplementation("org.assertj:assertj-core:4.0.0-M1")
+    testImplementation("org.awaitility:awaitility:4.3.0")
 }
 
 tasks.withType<JavaCompile> {

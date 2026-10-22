@@ -38,9 +38,11 @@ class UnitConfigTest {
     assertEquals("root", unitConfig.units().get(unit01).users().getLast().username());
     assertNotNull(unitConfig.units().get(unit01).users().getLast().password());
     assertThrows(
-        NoSuchElementException.class, () -> unitConfig.units().get(unit01).users().getLast().userId().orElseThrow());
+        NoSuchElementException.class,
+        () -> unitConfig.units().get(unit01).users().getLast().userId().orElseThrow());
     assertThrows(
-        NoSuchElementException.class, () -> unitConfig.units().get(unit01).users().getLast().groupId().orElseThrow());
+        NoSuchElementException.class,
+        () -> unitConfig.units().get(unit01).users().getLast().groupId().orElseThrow());
 
     assertEquals(1, unitConfig.units().get(unit01).services().size());
     assertEquals(1, unitConfig.units().get(unit01).services().getFirst().id());
@@ -56,7 +58,8 @@ class UnitConfigTest {
     assertEquals("amps_emulator", unitConfig.units().get(unit01).instances().get(1).name());
     assertEquals(888, unitConfig.units().get(unit01).instances().get(1).pid());
     assertEquals(
-        "/home/xmcs/XMCS/amhs_emulator/scripts/emu.sh", unitConfig.units().get(unit01).instances().get(1).location());
+        "/home/xmcs/XMCS/amhs_emulator/scripts/emu.sh",
+        unitConfig.units().get(unit01).instances().get(1).location());
     assertEquals("xmcs-monitor", unitConfig.units().get(unit01).instances().getLast().name());
     assertEquals(777, unitConfig.units().get(unit01).instances().getLast().pid());
     assertEquals(
@@ -84,9 +87,11 @@ class UnitConfigTest {
     assertEquals("root", unitConfig.units().get(unit02).users().getLast().username());
     assertNotNull(unitConfig.units().get(unit02).users().getLast().password());
     assertThrows(
-            NoSuchElementException.class, () -> unitConfig.units().get(unit02).users().getLast().userId().orElseThrow());
+        NoSuchElementException.class,
+        () -> unitConfig.units().get(unit02).users().getLast().userId().orElseThrow());
     assertThrows(
-            NoSuchElementException.class, () -> unitConfig.units().get(unit02).users().getLast().groupId().orElseThrow());
+        NoSuchElementException.class,
+        () -> unitConfig.units().get(unit02).users().getLast().groupId().orElseThrow());
 
     assertEquals(1, unitConfig.units().get(unit02).services().size());
     assertEquals(1, unitConfig.units().get(unit02).services().getFirst().id());
@@ -97,12 +102,12 @@ class UnitConfigTest {
     assertEquals("xmcs_server", unitConfig.units().get(unit02).instances().getFirst().name());
     assertEquals(999, unitConfig.units().get(unit02).instances().getFirst().pid());
     assertEquals(
-            "/home/xmcs/XMCS/xmcs_server/scripts/core.sh",
-            unitConfig.units().get(unit02).instances().getFirst().location());
+        "/home/xmcs/XMCS/xmcs_server/scripts/core.sh",
+        unitConfig.units().get(unit02).instances().getFirst().location());
     assertEquals("xmcs-monitor", unitConfig.units().get(unit02).instances().getLast().name());
     assertEquals(777, unitConfig.units().get(unit02).instances().getLast().pid());
     assertEquals(
-            "/home/xmcs/XMCS/xmcs-monitor/scripts/monitor.sh",
-            unitConfig.units().get(unit02).instances().getLast().location());
+        "/home/xmcs/XMCS/xmcs-monitor/scripts/monitor.sh",
+        unitConfig.units().get(unit02).instances().getLast().location());
   }
 }

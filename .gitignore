@@ -9,3 +9,4 @@ bin/
 *.env
 !example.env
 vsmc
+config/id_ed25519*
