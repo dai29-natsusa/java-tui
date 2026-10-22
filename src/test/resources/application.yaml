@@ -1,4 +1,8 @@
 ---
+RUNNER_PW: "dummy-runner-pw"
+ORACLE_PW: "dummy-oracle-pw"
+ROOT_PW: "dummy-root-pw"
+
 '%test':
   quarkus:
     log:

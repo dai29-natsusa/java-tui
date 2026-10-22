@@ -66,9 +66,11 @@ public class SshService {
   }
 
   /**
-   * Connects to target server via SSH user/password, and registers local public key into remote authorized_keys.
+   * Connects to target server via SSH user/password, and registers local public key into remote
+   * authorized_keys.
    */
-  public void registerKeyOnRemoteServer(String host, int port, String user, String password, Path publicKeyPath) throws Exception {
+  public void registerKeyOnRemoteServer(
+      String host, int port, String user, String password, Path publicKeyPath) throws Exception {
     if (Files.notExists(publicKeyPath)) {
       throw new IllegalArgumentException("Public key file does not exist at: " + publicKeyPath);
     }
@@ -78,21 +80,19 @@ public class SshService {
     try (SshClient client = SshClient.setUpDefaultClient()) {
       client.start();
 
-      try (ClientSession session = client.connect(user, host, port)
-              .verify(10, TimeUnit.SECONDS)
-              .getSession()) {
+      try (ClientSession session =
+          client.connect(user, host, port).verify(10, TimeUnit.SECONDS).getSession()) {
 
         session.addPasswordIdentity(password);
         session.auth().verify(10, TimeUnit.SECONDS);
 
-
         // Bash script to safely inject key into ~/.ssh/authorized_keys
-        String remoteCommand = String.format(
-                "mkdir -p ~/.ssh && chmod 700 ~/.ssh && " +
-                        "touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && " +
-                        "grep -qF '%s' ~/.ssh/authorized_keys || echo '%s' >> ~/.ssh/authorized_keys",
-                pubKey, pubKey
-        );
+        String remoteCommand =
+            String.format(
+                "mkdir -p ~/.ssh && chmod 700 ~/.ssh && "
+                    + "touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && "
+                    + "grep -qF '%s' ~/.ssh/authorized_keys || echo '%s' >> ~/.ssh/authorized_keys",
+                pubKey, pubKey);
 
         executeRemoteCommand(session, remoteCommand);
       } finally {
