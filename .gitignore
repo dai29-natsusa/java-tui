@@ -8,6 +8,10 @@ bin/
 *.log
 *.env
 !example.env
-vsmc
+vsmc/amhs_emulator
+vsmc/xmcs-monitor
+vsmc/xmcs_server
+vsmc/tools
+vsmc/config
 config/id_ed25519*
 .vibe-wise

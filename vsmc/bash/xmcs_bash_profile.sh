@@ -1,0 +1,36 @@
+# xMCS specific
+    XMCS_HOME=/home/xmcs/XMCS/xmcs_server
+    alias xmcs='cd ${XMCS_HOME}'
+    alias corelog='tail -F ${XMCS_HOME}/logs/CORE/CORE_1-trace.log'
+    alias viewcorelog='view ${XMCS_HOME}/logs/CORE/CORE_1-trace.log'
+    alias corealertlog='tail -F ${XMCS_HOME}/logs/CORE/CORE_1-alert.log'
+    alias viewcorealertlog='view ${XMCS_HOME}/logs/CORE/CORE_1-alert.log'
+    alias amhslog='tail -F ${XMCS_HOME}/logs/AMHSIF/AMHS-IF_1-trace.log'
+    alias viewamhslog='view ${XMCS_HOME}/logs/AMHSIF/AMHS-IF_1-trace.log'
+    alias amhsalertlog='tail -F ${XMCS_HOME}/logs/AMHSIF/AMHS-IF_1-alert.log'
+    alias hostlog='tail -F ${XMCS_HOME}/logs/HOSTIF/HOST-IF_1-trace.log'
+    alias viewhostlog='view ${XMCS_HOME}/logs/HOSTIF/HOST-IF_1-trace.log'
+    alias hostalertlog='tail -F ${XMCS_HOME}/logs/HOSTIF/HOST-IF_1-alert.log'
+    alias cachelog='tail -F ${XMCS_HOME}/logs/CACHE/CACHE_1-trace.log'
+    alias viewcachelog='view ${XMCS_HOME}/logs/CACHE/CACHE_1-trace.log'
+    alias cachealertlog='tail -F ${XMCS_HOME}/logs/CACHE/CACHE_1-alert.log'
+    alias clientlog='tail -F ${XMCS_HOME}/logs/CLIENT/CLIENT-IF_1-trace.log'
+    alias viewclientlog='view ${XMCS_HOME}/logs/CLIENT/CLIENT-IF_1-trace.log'
+    alias clientalertlog='tail -F ${XMCS_HOME}/logs/CLIENT/CLIENT-IF_1-alert.log'
+    alias layoutlog='tail -F ${XMCS_HOME}/logs/LAYOUTMAN/LAYOUT-MAN_1-trace.log'
+    alias viewlayoutlog='view ${XMCS_HOME}/logs/LAYOUTMAN/LAYOUT-MAN_1-trace.log'
+    alias layoutalertlog='tail -F ${XMCS_HOME}/logs/LAYOUTMAN/LAYOUT-MAN_1-alert.log'
+    alias hazellog='tail -F ${XMCS_HOME}/logs/CACHE/hazelcast-CACHE_1.log'
+    alias checkif='${XMCS_HOME}/scripts/check-if.sh'
+
+    XMCS_MONITOR=/home/xmcs/XMCS/xmcs-monitor
+    alias monitorlog='tail -F ${XMCS_MONITOR}/logs/xmcs-monitor.log'
+    alias monitorstart='${XMCS_MONITOR}/scripts/xmcs-monitor.sh start'
+    alias monitorstatus='${XMCS_MONITOR}/scripts/xmcs-monitor.sh status'
+    alias monitorstop='${XMCS_MONITOR}/scripts/xmcs-monitor.sh stop'
+
+    XMCS_EMU=/home/xmcs/XMCS/amhs_emulator
+    alias emulog='tail -F ${XMCS_EMU}/logs/emulator.log'
+    alias emustart='${XMCS_EMU}/scripts/amhs_emulator.sh start'
+    alias emustatus='${XMCS_EMU}/scripts/amhs_emulator.sh status'
+    alias emustop='${XMCS_EMU}/scripts/amhs_emulator.sh stop'
