@@ -10,6 +10,7 @@ val quarkusPlatformArtifactId = project.property("quarkusPlatformArtifactId")
 val quarkusPlatformVersion = project.property("quarkusPlatformVersion")
 val tambouiVersion = project.property("tambouiVersion")
 val nativePlatform: String = project.findProperty("nativePlatform")?.toString() ?: "linux"
+val mapStructVersion = "1.6.3"
 
 group = "jp.co.santa.soft"
 version = "1.0.0-SNAPSHOT"
@@ -62,6 +63,10 @@ dependencies {
     implementation("dev.tamboui:tamboui-annotations")
     annotationProcessor("dev.tamboui:tamboui-processor:$tambouiVersion")
 
+    // MapStruct
+    implementation("org.mapstruct:mapstruct:$mapStructVersion")
+    annotationProcessor("org.mapstruct:mapstruct-processor:$mapStructVersion")
+
     // Testing (Quarkus JUnit 5 + TamboUI AssertJ buffer assertions)
     testImplementation("io.quarkus:quarkus-junit")
     testImplementation("org.assertj:assertj-core:4.0.0-M1")
@@ -107,6 +112,8 @@ quarkus {
             "-H:+UnlockExperimentalVMOptions",
             "-H:IncludeResources=.*\\.tcss$,META-INF/services/.*",
             "--initialize-at-run-time=dev.tamboui.backend.panama",
+            "--initialize-at-run-time=org.apache.sshd",
+            "--initialize-at-build-time=org.apache.sshd.common.file.root.RootedFileSystemProvider",
         )
 
     if (nativePlatform.equals("windows", ignoreCase = true)) {

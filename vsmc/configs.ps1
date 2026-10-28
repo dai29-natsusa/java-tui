@@ -1,4 +1,5 @@
 Import-Module "$PSScriptRoot/import-env.psm1"
+Import-Module "$PSScriptRoot/import-yaml.psm1"
 
 Import-Env
 
@@ -15,16 +16,4 @@ $sshBase = @(
     "${env:xmcs_u}@${env:unit01_host}"
 )
 
-$Units = @{
-    "unit01" = @{
-        Host = "${env:unit01_host}"
-        Folder = @("amhs_emulator", "xmcs_server", "xmcs-monitor")
-    }
-
-    "unit02" = @{
-        Host = "${env:unit02_host}"
-        Folder = @("xmcs_server", "xmcs-monitor")
-    }
-}
-
-$Users = (Get-ChildItem Env: | Where-Object Name -match '_u$')
+$config = Import-Yaml -DirectoryPath $configDir

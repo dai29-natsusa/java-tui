@@ -24,7 +24,7 @@ class UnitConfigTest {
     assertEquals("192.168.40.1", unitConfig.units().get(unit01).ip());
     assertEquals("ol8xmcs1", unitConfig.units().get(unit01).hostname());
     assertEquals("/home/xmcs/XMCS", unitConfig.units().get(unit01).workdir());
-    assertEquals(7, unitConfig.units().get(unit01).memory().length);
+    assertEquals(7, unitConfig.units().get(unit01).heap().length);
 
     assertEquals(3, unitConfig.units().get(unit01).users().size());
     assertEquals("xmcs", unitConfig.units().get(unit01).users().getFirst().username());
@@ -73,7 +73,7 @@ class UnitConfigTest {
     assertEquals("192.168.40.2", unitConfig.units().get(unit02).ip());
     assertEquals("ol8xmcs2", unitConfig.units().get(unit02).hostname());
     assertEquals("/home/xmcs/XMCS", unitConfig.units().get(unit02).workdir());
-    assertEquals(7, unitConfig.units().get(unit02).memory().length);
+    assertEquals(7, unitConfig.units().get(unit02).heap().length);
 
     assertEquals(3, unitConfig.units().get(unit02).users().size());
     assertEquals("xmcs", unitConfig.units().get(unit02).users().getFirst().username());

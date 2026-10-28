@@ -20,6 +20,7 @@ quarkus:
   arc:
     remove-unused-beans: "fwk"
   native:
+    container-runtime: podman
     auto-service-loader-registration: true
     builder-image: "quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-25"
     resources:

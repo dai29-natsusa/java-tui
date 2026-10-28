@@ -40,7 +40,7 @@ public interface UnitConfig {
     List<Instance> instances();
 
     @WithConverter(HeapMatrixConverter.class)
-    HeapConfig[] memory();
+    HeapConfig[] heap();
   }
 
   interface User {

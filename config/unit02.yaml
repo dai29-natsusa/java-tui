@@ -9,7 +9,7 @@ unit:
       hostname: "ol8xmcs2"
       workdir: "/home/xmcs/XMCS"
       # spotless:off
-      memory: |
+      heap: |
         # module, xms,  xms
         CACHE,    512, 2048
         CORE,     512, 1024

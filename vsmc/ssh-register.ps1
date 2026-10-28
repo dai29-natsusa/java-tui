@@ -5,7 +5,7 @@ param (
 
 . "$PSScriptRoot/configs.ps1"
 
-$ServerIp   = $Units[$Unit].Host
+$ServerIp   = $config.unit.units[$Unit].ip
 
 $HostExists = $false
 
@@ -35,15 +35,16 @@ $RemoteCommand = "mkdir -p ~/.ssh && " +
 
 $SshPass  = "$PSScriptRoot/sshp.exe"
 
+$Users = $config.unit.units[$Unit].users
 foreach ($user in $Users) {
-    Write-Host "$($user.Value)"
-    $password = Get-Content "Env:\$($user.Value)_p"
+    Write-Host "$($user.username)"
+    $password = $user.password
     & $SshPass `
         -p $password `
         ssh `
         -o StrictHostKeyChecking=no `
         -o UserKnownHostsFile="$KnownHosts" `
-        "$($user.Value)@$ServerIp" `
+        "$($user.username)@$ServerIp" `
         $RemoteCommand
 
     ssh `
@@ -51,6 +52,6 @@ foreach ($user in $Users) {
         -o BatchMode=yes `
         -o StrictHostKeyChecking=yes `
         -o UserKnownHostsFile="$KnownHosts" `
-        "$($user.Value)@$ServerIp" `
-        "echo $($user.Value)_SSH_KEY_AUTH_OK" | Tee-Object "$KeyDir/$($user.Value).txt"
+        "$($user.username)@$ServerIp" `
+        "echo $($user.username)_SSH_KEY_AUTH_OK" | Tee-Object "$KeyDir/$($user.username).txt"
 }
