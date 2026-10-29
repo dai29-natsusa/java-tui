@@ -7,7 +7,7 @@ param (
 
 # Ensure the path exists
 if (-not (Test-Path -Path $Path)) {
-    if ($Quiet) {
+    if (-not $Quiet) {
         Write-Error "The specified directory does not exist: $Path"
     }
     exit 1
@@ -16,7 +16,7 @@ if (-not (Test-Path -Path $Path)) {
 # Find all matching files recursively
 $files = Get-ChildItem -Path $Path -Recurse -File -Include "*.sh", "*.properties", "*.ini", "*.json", "*.xml", "*.sql", "*.command", "*.yaml"
 
-if ($Quiet) {
+if (-not $Quiet) {
     Write-Host "Found $($files.Count) file(s) matching criteria." -ForegroundColor Cyan
 }
 
@@ -31,16 +31,16 @@ foreach ($file in $files) {
 
         # Write back to file with UTF-8 encoding without BOM using standard .NET I/O
         [System.IO.File]::WriteAllText($file.FullName, $newContent, (New-Object System.Text.UTF8Encoding($false)))
-        if ($Quiet) {
+        if (-not $Quiet) {
             Write-Host "Converted: $($file.FullName)" -ForegroundColor Green
         }
     } else {
-        if ($Quiet) {
+        if (-not $Quiet) {
             Write-Host "Skipped (already LF): $($file.FullName)" -ForegroundColor Gray
         }
     }
 }
 
-if ($Quiet) {
+if (-not $Quiet) {
     Write-Host "Processing complete." -ForegroundColor Cyan
 }

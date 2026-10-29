@@ -5,7 +5,7 @@ unit:
       project: "vsmc"
       id: 2
       name: "xmcs2"
-      ip: "192.168.40.2"
+      ip: "192.168.40.11"
       hostname: "ol8xmcs2"
       workdir: "/home/xmcs/XMCS"
       # spotless:off

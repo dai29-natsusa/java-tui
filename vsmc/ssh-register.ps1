@@ -11,7 +11,7 @@ $HostExists = $false
 
 if (Test-Path $knownHosts)
 {
-    $HostExists = Get-Content $KnownHosts |
+    $HostExists = Get-Content $knownHosts |
             Select-String -SimpleMatch $ServerIp -Quiet
 }
 
@@ -21,7 +21,13 @@ if (-not $HostExists)
         Out-File `
             -Append `
             -Encoding ascii `
-            $KnownHosts
+            $knownHosts
+}
+
+$connection = Test-NetConnection -ComputerName "$($config.unit.units[$Unit].ip)" -Port 22 -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+if (-not $connection.TcpTestSucceeded) {
+    Write-Warning "Host: $($config.unit.units[$Unit].ip) connection failed"
+    exit 0
 }
 
 $PubKey = (Get-Content $publicKey -Raw).Trim()
@@ -43,15 +49,19 @@ foreach ($user in $Users) {
         -p $password `
         ssh `
         -o StrictHostKeyChecking=no `
-        -o UserKnownHostsFile="$KnownHosts" `
+        -o UserKnownHostsFile="$knownHosts" `
         "$($user.username)@$ServerIp" `
         $RemoteCommand
 
-    ssh `
-        -i $privateKey `
-        -o BatchMode=yes `
-        -o StrictHostKeyChecking=yes `
-        -o UserKnownHostsFile="$KnownHosts" `
-        "$($user.username)@$ServerIp" `
-        "echo $($user.username)_SSH_KEY_AUTH_OK" | Tee-Object "$KeyDir/$($user.username).txt"
+    if ($LASTEXITCODE -eq 0) {
+        ssh `
+            -i $privateKey `
+            -o BatchMode=yes `
+            -o StrictHostKeyChecking=yes `
+            -o UserKnownHostsFile="$knownHosts" `
+            "$($user.username)@$ServerIp" `
+            "echo $($user.username)_SSH_KEY_AUTH_OK" | Tee-Object "$configDir/$($user.username).txt"
+    } else {
+        Write-Host "User: [$($user.username)] doesn't exist" -ForegroundColor Red
+    }
 }
