@@ -1,9 +1,19 @@
+$script:GlobalConfigCache = $null
+
 function Import-Yaml {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$DirectoryPath
+        [string]$DirectoryPath,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Force
     )
+
+    if ($null -ne $script:GlobalConfigCache -and -not $Force) {
+        Write-Verbose "Using cached configuration (skipping disk read)."
+        return $script:GlobalConfigCache
+    }
 
     if (-not (Test-Path -Path $DirectoryPath)) {
         throw "Directory not found: $DirectoryPath"
@@ -14,32 +24,26 @@ function Import-Yaml {
         Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
         Install-Module powershell-yaml -Force -AcceptLicense -Scope CurrentUser
     }
+    Import-Module powershell-yaml -ErrorAction Stop
 
-    Import-Module powershell-yaml
-
-    # Find all yaml/yml files in the directory
     $yamlFiles = Get-ChildItem -Path $DirectoryPath -Filter "*.yaml" -File
     if ($yamlFiles.Count -eq 0) {
         $yamlFiles = Get-ChildItem -Path $DirectoryPath -Filter "*.yml" -File
     }
-
     if ($yamlFiles.Count -eq 0) {
         throw "No YAML files found in directory: $DirectoryPath"
     }
 
-    # Initialize a master configuration structure
     $masterConfig = [ordered]@{
         "unit" = [ordered]@{
             "units" = [ordered]@{}
         }
     }
 
-    # 1. Read and merge all YAML files into the master units collection
     foreach ($file in $yamlFiles) {
         $rawContent = Get-Content -Path $file.FullName -Raw
         $parsed = ConvertFrom-Yaml $rawContent
 
-        # Extract units from the parsed file and merge them into masterConfig
         if ($parsed.unit -and $parsed.unit.units) {
             foreach ($unitKey in $parsed.unit.units.Keys) {
                 $masterConfig.unit.units[$unitKey] = $parsed.unit.units[$unitKey]
@@ -47,7 +51,7 @@ function Import-Yaml {
         }
     }
 
-    # Helper function to traverse object paths (e.g., "unit.units.unit01.workdir")
+    # Helper function to traverse object/dictionary paths dynamically
     function Resolve-PathValue {
         param($targetPath, $rootObj)
         $parts = $targetPath -split '\.'
@@ -55,25 +59,15 @@ function Import-Yaml {
         foreach ($part in $parts) {
             if ($null -eq $current) { return $null }
             if ($current -is [System.Collections.IDictionary]) {
-                if ($current.Contains($part)) {
-                    $current = $current[$part]
-                } else {
-                    return $null
-                }
+                if ($current.Contains($part)) { $current = $current[$part] } else { return $null }
             } elseif ($current -is [PSCustomObject]) {
-                if ($current.psobject.properties.Name -contains $part) {
-                    $current = $current.$part
-                } else {
-                    return $null
-                }
-            } else {
-                return $null
-            }
+                if ($current.psobject.properties.Name -contains $part) { $current = $current.$part } else { return $null }
+            } else { return $null }
         }
         return $current
     }
 
-    # Helper function to resolve ${...} expressions
+    # Resolver for ${...} variables (Environment variables or internal references)
     function Resolve-String {
         param($text, $root)
         $matchedItems = [regex]::Matches($text, '\$\{([^}]+)\}')
@@ -84,16 +78,12 @@ function Import-Yaml {
             $expr = $match.Groups[1].Value
             $replacement = $null
 
-            # Priority 1: Check environment variables
             $envVal = [System.Environment]::GetEnvironmentVariable($expr)
             if (-not [string]::IsNullOrEmpty($envVal)) {
                 $replacement = $envVal
             } else {
-                # Priority 2: Check internal path references across all merged units
                 $internalVal = Resolve-PathValue -targetPath $expr -root $root
-                if ($null -ne $internalVal) {
-                    $replacement = [string]$internalVal
-                }
+                if ($null -ne $internalVal) { $replacement = [string]$internalVal }
             }
 
             if ($null -ne $replacement) {
@@ -103,17 +93,14 @@ function Import-Yaml {
         return $resolvedText
     }
 
-    # Recursive walker to process all strings
+    # Recursive walker supporting Dictionaries, Custom Objects, and Lists
     function Update-Strings($node, $root) {
         if ($node -is [System.Collections.IDictionary]) {
             foreach ($key in @($node.Keys)) {
                 $val = $node[$key]
                 if ($val -is [string]) {
                     $newVal = Resolve-String -text $val -root $root
-                    if ($newVal -ne $val) {
-                        $node[$key] = $newVal
-                        $script:hasChanges = $true
-                    }
+                    if ($newVal -ne $val) { $node[$key] = $newVal; $script:hasChanges = $true }
                 } else {
                     Update-Strings -node $val -root $root
                 }
@@ -123,10 +110,7 @@ function Import-Yaml {
                 $val = $prop.Value
                 if ($val -is [string]) {
                     $newVal = Resolve-String -text $val -root $root
-                    if ($newVal -ne $val) {
-                        $node.($prop.Name) = $newVal
-                        $script:hasChanges = $true
-                    }
+                    if ($newVal -ne $val) { $node.($prop.Name) = $newVal; $script:hasChanges = $true }
                 } else {
                     Update-Strings -node $val -root $root
                 }
@@ -136,10 +120,7 @@ function Import-Yaml {
                 $val = $node[$i]
                 if ($val -is [string]) {
                     $newVal = Resolve-String -text $val -root $root
-                    if ($newVal -ne $val) {
-                        $node[$i] = $newVal
-                        $script:hasChanges = $true
-                    }
+                    if ($newVal -ne $val) { $node[$i] = $newVal; $script:hasChanges = $true }
                 } else {
                     Update-Strings -node $val -root $root
                 }
@@ -147,7 +128,6 @@ function Import-Yaml {
         }
     }
 
-    # 2. Multi-pass resolution loop across the entire merged object tree
     $maxPasses = 5
     $pass = 0
     $changed = $true
@@ -160,6 +140,7 @@ function Import-Yaml {
         $changed = $script:hasChanges
     }
 
-    return $masterConfig
+    $script:GlobalConfigCache = $masterConfig
+    return $script:GlobalConfigCache
 }
 Export-ModuleMember -Function Import-Yaml
