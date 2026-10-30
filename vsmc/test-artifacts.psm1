@@ -24,11 +24,13 @@ function Test-Artifacts {
     $isOk = $hasZip -or $allFoldersExist
 
     # Display findings
+    $foundTxt = "`e[32mFOUND`e[0m"
+    $notFoundTxt = "`e[31mNOT FOUND`e[0m"
     Write-Host "`n--- Status Check ---" -ForegroundColor Yellow
-    Write-Host "  - XMCS.zip : $(if ($hasZip) { "FOUND" } else { "NOT FOUND" })"
-    Write-Host "  - amhs_emulator folder: $(if ($hasO1) { "FOUND" } else { "NOT FOUND" })"
-    Write-Host "  - xmcs_server folder: $(if ($hasO2) { "FOUND" } else { "NOT FOUND" })"
-    Write-Host "  - xmcs-monitor folder: $(if ($hasO3) { "FOUND" } else { "NOT FOUND" })"
+    Write-Host "  - XMCS.zip : $(if ($hasZip) { $foundTxt } else { $notFoundTxt })"
+    Write-Host "  - amhs_emulator folder: $(if ($hasO1) { $foundTxt } else { $notFoundTxt })"
+    Write-Host "  - xmcs_server folder: $(if ($hasO2) { $foundTxt } else { $notFoundTxt })"
+    Write-Host "  - xmcs-monitor folder: $(if ($hasO3) { $foundTxt } else { $notFoundTxt })"
     Write-Host ""
 
     if ($hasZip) {

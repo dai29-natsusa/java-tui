@@ -33,7 +33,7 @@ public interface UnitConfig {
     @WithDefault("/home/unit/WORKDIR")
     String workdir();
 
-    List<User> users();
+    Map<String, User> users();
 
     List<Service> services();
 

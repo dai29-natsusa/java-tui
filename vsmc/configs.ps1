@@ -1,5 +1,4 @@
 Import-Module "$PSScriptRoot/import-env.psm1"
-Import-Module "$PSScriptRoot/import-yaml.psm1"
 
 Import-Env
 
@@ -12,8 +11,5 @@ $sshBase = @(
     "-i", $privateKey,
     "-o", "BatchMode=yes",
     "-o", "StrictHostKeyChecking=yes",
-    "-o", "UserKnownHostsFile=$knownHosts",
-    "${env:xmcs_u}@${env:unit01_host}"
+    "-o", "UserKnownHostsFile=$knownHosts"
 )
-
-$config = Import-Yaml -DirectoryPath $configDir

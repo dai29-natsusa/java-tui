@@ -20,16 +20,19 @@ unit:
         LAYOUT,   256,  256
       # spotless:on
       users:
-      - username: "xmcs"
-        password: "${RUNNER_PW}"
-        user-id: -1
-        group-id: -1
-      - username: "oracle"
-        password: "${ORACLE_PW}"
-        user-id: -1
-        group-id: -1
-      - username: "root"
-        password: "${ROOT_PW}"
+        runner:
+          username: "xmcs"
+          password: "${RUNNER_PW}"
+          user-id: -1
+          group-id: -1
+        dbsys:
+          username: "oracle"
+          password: "${ORACLE_PW}"
+          user-id: -1
+          group-id: -1
+        admin:
+          username: "root"
+          password: "${ROOT_PW}"
       services:
       - id: 1
         name: "oracle"

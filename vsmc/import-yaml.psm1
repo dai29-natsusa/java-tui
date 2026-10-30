@@ -1,4 +1,4 @@
-$script:GlobalConfigCache = $null
+$Script:GlobalYamlCache = $null
 
 function Import-Yaml {
     [CmdletBinding()]
@@ -10,11 +10,9 @@ function Import-Yaml {
         [switch]$Force
     )
 
-    if ($null -ne $script:GlobalConfigCache -and -not $Force) {
-        Write-Verbose "Using cached configuration (skipping disk read)."
-        return $script:GlobalConfigCache
+    if ($null -ne $Script:GlobalYamlCache -and -not $Force) {
+        return $Script:GlobalYamlCache
     }
-
     if (-not (Test-Path -Path $DirectoryPath)) {
         throw "Directory not found: $DirectoryPath"
     }
@@ -100,7 +98,7 @@ function Import-Yaml {
                 $val = $node[$key]
                 if ($val -is [string]) {
                     $newVal = Resolve-String -text $val -root $root
-                    if ($newVal -ne $val) { $node[$key] = $newVal; $script:hasChanges = $true }
+                    if ($newVal -ne $val) { $node[$key] = $newVal; $Script:hasChanges = $true }
                 } else {
                     Update-Strings -node $val -root $root
                 }
@@ -110,7 +108,7 @@ function Import-Yaml {
                 $val = $prop.Value
                 if ($val -is [string]) {
                     $newVal = Resolve-String -text $val -root $root
-                    if ($newVal -ne $val) { $node.($prop.Name) = $newVal; $script:hasChanges = $true }
+                    if ($newVal -ne $val) { $node.($prop.Name) = $newVal; $Script:hasChanges = $true }
                 } else {
                     Update-Strings -node $val -root $root
                 }
@@ -120,7 +118,7 @@ function Import-Yaml {
                 $val = $node[$i]
                 if ($val -is [string]) {
                     $newVal = Resolve-String -text $val -root $root
-                    if ($newVal -ne $val) { $node[$i] = $newVal; $script:hasChanges = $true }
+                    if ($newVal -ne $val) { $node[$i] = $newVal; $Script:hasChanges = $true }
                 } else {
                     Update-Strings -node $val -root $root
                 }
@@ -135,12 +133,12 @@ function Import-Yaml {
     while ($changed -and ($pass -lt $maxPasses)) {
         $pass++
         $changed = $false
-        $script:hasChanges = $false
+        $Script:hasChanges = $false
         Update-Strings -node $masterConfig -root $masterConfig
-        $changed = $script:hasChanges
+        $changed = $Script:hasChanges
     }
 
-    $script:GlobalConfigCache = $masterConfig
-    return $script:GlobalConfigCache
+    $Script:GlobalYamlCache = $masterConfig
+    return $Script:GlobalYamlCache
 }
 Export-ModuleMember -Function Import-Yaml

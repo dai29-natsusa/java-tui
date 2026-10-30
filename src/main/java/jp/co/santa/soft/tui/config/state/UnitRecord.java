@@ -1,6 +1,7 @@
 package jp.co.santa.soft.tui.config.state;
 
 import java.util.List;
+import java.util.Map;
 import jp.co.santa.soft.tui.config.converter.HeapConfig;
 
 public record UnitRecord(
@@ -10,7 +11,7 @@ public record UnitRecord(
     String ip,
     String hostname,
     String workdir,
-    List<UserRecord> users,
+    Map<String, UserRecord> users,
     List<ServiceRecord> services,
     List<InstanceRecord> instance,
     HeapConfig[] heap) {}

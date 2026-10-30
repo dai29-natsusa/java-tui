@@ -5,7 +5,7 @@ param (
 
 . "$PSScriptRoot/configs.ps1"
 
-$ServerIp   = $config.unit.units[$Unit].ip
+$ServerIp   = $Global:AppConfig.unit.units[$Unit].ip
 
 $HostExists = $false
 
@@ -24,9 +24,7 @@ if (-not $HostExists)
             $knownHosts
 }
 
-$connection = Test-NetConnection -ComputerName "$($config.unit.units[$Unit].ip)" -Port 22 -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
-if (-not $connection.TcpTestSucceeded) {
-    Write-Warning "Host: $($config.unit.units[$Unit].ip) connection failed"
+if ($Global:AppConfig.unit.units[$Unit].status -eq "offline") {
     exit 0
 }
 
@@ -41,8 +39,9 @@ $RemoteCommand = "mkdir -p ~/.ssh && " +
 
 $SshPass  = "$PSScriptRoot/sshp.exe"
 
-$Users = $config.unit.units[$Unit].users
-foreach ($user in $Users) {
+$Users = $Global:AppConfig.unit.units[$Unit].users
+foreach ($role in $Users.Keys) {
+    $user = $Users[$role]
     Write-Host "$($user.username)"
     $password = $user.password
     & $SshPass `
