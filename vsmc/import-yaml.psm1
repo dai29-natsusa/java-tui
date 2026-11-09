@@ -20,7 +20,7 @@ function Import-Yaml {
     if (-not (Get-Module -ListAvailable -Name "powershell-yaml")) {
         Write-Warning "The 'powershell-yaml' module is required.`n Installing..."
         Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
-        Install-Module powershell-yaml -Force -AcceptLicense -Scope CurrentUser
+        Install-Module powershell-yaml -Force -Scope CurrentUser
     }
     Import-Module powershell-yaml -ErrorAction Stop
 

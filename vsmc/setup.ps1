@@ -1,7 +1,7 @@
 # Import Modules
 Import-Module "$PSScriptRoot/ssh-key.psm1"
-Import-Module "$PSScriptRoot/import-env.psm1"
-Import-Module "$PSScriptRoot/import-yaml.psm1"
+Import-Module "$PSScriptRoot/import-env.psm1" -Force
+Import-Module "$PSScriptRoot/import-yaml.psm1" -Force
 Import-Module "$PSScriptRoot/test-connectivity.psm1"
 Import-Module "$PSScriptRoot/test-artifacts.psm1"
 
@@ -26,13 +26,14 @@ if (-not (Test-Artifacts)) {
 & "$PSScriptRoot/line-end.ps1" -Path "$PSScriptRoot/xmcs-monitor" -Quiet
 # Step 2 - create ssh 'ed25519' keys file
 New-SshKey
-# Step 3 - check existing remote user/pass/host-ip
+# Step 3 - import configs and important data
 Import-Env
 $Global:AppConfig = Import-Yaml -DirectoryPath $configDir
+# Step 4 - check existing remote user/pass/host-ip
 Test-UnitConnectivity -Config $Global:AppConfig
-# Step 4 - register public key to remote
-& "$PSScriptRoot/ssh-register.ps1" -Unit unit01
-& "$PSScriptRoot/ssh-register.ps1" -Unit unit02
-# Step 5 modify RUNNER user's bashrc
-& "$PSScriptRoot/edit-bashrc.ps1" -Unit unit01 -Role runner
-& "$PSScriptRoot/edit-bashrc.ps1" -Unit unit02 -Role runner
+# Step 5 - register public key to remote
+& "$PSScriptRoot/ssh-register.ps1"
+# Step 6 - modify RUNNER user's bashrc
+& "$PSScriptRoot/edit-bashrc.ps1"
+# Step 7 - synchronize artifacts
+& "$PSScriptRoot/sync-instances.ps1" -Force

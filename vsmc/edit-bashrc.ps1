@@ -1,44 +1,42 @@
-param (
-    [Parameter(Mandatory = $true)]
-    [string]$Unit,
-
-    [Parameter(Mandatory = $true)]
-    [string]$Role
-)
-
 . "$PSScriptRoot/configs.ps1"
 
-if ($Global:AppConfig.unit.units[$Unit].status -eq "offline") {
-    exit 0
-}
+$appConfig = $Global:AppConfig
 
-$xbashLocal = Join-Path -Path $PSScriptRoot -ChildPath "bash/xmcs_bashrc.sh"
-$xbashRemote = '~/xmcs_bashrc.sh'
-$targetUserIp = "$($Global:AppConfig.unit.units[$Unit].users[$Role].username)@$($Global:AppConfig.unit.units[$Unit].ip)"
+foreach ($unitKey in $appConfig.unit.units.Keys) {
+    if ($appConfig.unit.units[$unitKey].status -eq "offline") {
+        Write-Host "$unitKey is OFFLINE" -ForegroundColor DarkYellow
+        continue
+    }
 
-$scpArgs = $sshBase + @(
-    "-q",
-    $xbashLocal,
-    "$($targetUserIp):${xbashRemote}"
-)
+    $xbashLocal = Join-Path -Path $PSScriptRoot -ChildPath "bash/xmcs_bashrc.sh"
+    $xbashRemote = '~/xmcs_bashrc.sh'
+    $username = $appConfig.unit.units[$unitKey].users.runner.username
+    $targetUserIp = "$($username)@$($appConfig.unit.units[$unitKey].ip)"
 
-& scp @scpArgs
+    $scpArgs = $sshBase + @(
+        "-q",
+        $xbashLocal,
+        "$($targetUserIp):${xbashRemote}"
+    )
 
-# 1. Define the block content to check and append
-$startMarker = "# {{ xMCS specific"
-$endMarker   = "# }} xMCS specific"
+    & scp @scpArgs 
 
-$blockContent = @"
+    # 1. Define the block content to check and append
+    $startMarker = "# {{ xMCS specific"
+    $endMarker   = "# }} xMCS specific"
+
+    $blockContent = @"
 $startMarker
-if [ "`$USER" = "$User" ]; then
+if [ "`$USER" = "$username" ]; then
     source "`$HOME/xmcs_bashrc.sh"
 fi
 $endMarker
 "@
 
-ssh @sshBase $targetUserIp "grep -qF '$startMarker' ~/.bashrc"
+    ssh @sshBase $targetUserIp "grep -qF '$startMarker' ~/.bashrc"
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Appending to .bashrc" -ForegroundColor Gray
-    $blockContent -replace "`r`n", "`n" | ssh @sshBase "$targetUserIp" "tr -d '\r' >> ~/.bashrc"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Appending to .bashrc" -ForegroundColor Gray
+        $blockContent -replace "`r`n", "`n" | ssh @sshBase "$targetUserIp" "tr -d '\r' >> ~/.bashrc"
+    }
 }

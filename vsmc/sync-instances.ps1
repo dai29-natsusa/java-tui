@@ -1,23 +1,27 @@
-function Sync-Instances {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Unit,
+param(
+    [Parameter(Mandatory = $false)]
+    [string]$Path = "$PSScriptRoot",
 
-        [Parameter(Mandatory = $false)]
-        [string]$LocalInstancesPath = "$PSScriptRoot",
+    [Parameter(Mandatory = $false)]
+    [switch]$Force
+)
 
-        [Parameter(Mandatory = $false)]
-        [switch]$Force
-    )
+. "$PSScriptRoot/configs.ps1"
 
-    . "$PSScriptRoot/configs.ps1"
+$appConfig = $Global:AppConfig
 
-    $UnitConfig = $Global:AppConfig.unit.units[$Unit]
+foreach ($unitKey in $appConfig.unit.units.Keys) {
+
+    if ($appConfig.unit.units[$unitKey].status -eq "offline") {
+        Write-Host "$unitKey is OFFLINE" -ForegroundColor DarkYellow
+        continue
+    }
+
+    $UnitConfig = $appConfig.unit.units[$unitKey]
     $workdir = $UnitConfig.workdir
     Write-Host "Synchronizing instances for unit at workdir: $workdir" -ForegroundColor Cyan
 
-    $targetUserIp = "$($UnitConfig.users[$Role].username)@$($UnitConfig.ip)"
+    $targetUserIp = "$($UnitConfig.users.runner.username)@$($UnitConfig.ip)"
     # Ensure the parent workdir exists remotely
     $mkdirArgs = $sshBase + @("$targetUserIp", "mkdir -p $workdir")
     & ssh @mkdirArgs | Out-Null
@@ -31,17 +35,16 @@ function Sync-Instances {
     }
 
     # 2. Query the remote host to find what instance folders currently exist inside $workdir
-    # We list only directories inside the workdir to compare
     $listRemoteDirsScript = @"
 if [ -d "$workdir" ]; then
-    find "$workdir" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;
+    find "$workdir" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;;
 fi
 "@
 
     $listArgs = $sshBase + @("$targetUserIp", $listRemoteDirsScript)
     $remoteDirsOutput = & ssh @listArgs
 
-    # Parse remote directories into an array (handling potential whitespace/newlines)
+    # Parse remote directories into an array
     $remoteInstanceNames = @()
     if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($remoteDirsOutput)) {
         $remoteInstanceNames = $remoteDirsOutput -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
@@ -54,7 +57,6 @@ fi
     # 3. REMOVE EXTRA INSTANCES (Remote has it, but Config does NOT)
     # ==========================================
     foreach ($remoteDir in $remoteInstanceNames) {
-        # Check if this remote directory is NOT in our YAML configuration
         if ($configInstanceNames -notcontains $remoteDir) {
             Write-Host "  -> Extra instance found on remote ('$remoteDir') which is missing from YAML config. Removing..." -ForegroundColor Yellow
 
@@ -72,34 +74,50 @@ fi
     }
 
     # ==========================================
-    # 4. UPLOAD MISSING INSTANCES (Config has it, but Remote does NOT)
+    # 4. UPLOAD MISSING INSTANCES (Filtered: Excluding .log and .gz)
     # ==========================================
     foreach ($inst in $UnitConfig.instances) {
         $instName = $inst.name
-        $localInstPath = Join-Path $LocalInstancesPath $instName
+        $localInstPath = Join-Path $Path $instName
 
-        # Check if it's missing on the remote side
         if ($remoteInstanceNames -notcontains $instName -or $Force) {
-            Write-Host "  -> Instance '$instName' is missing on remote. Uploading via scp..." -ForegroundColor Yellow
 
             if (-not (Test-Path -Path $localInstPath)) {
-                Write-Error "  -> Local instance source folder not found at: $localInstPath"
+                Write-Warning "  -> Local instance source folder not found at: $localInstPath"
                 continue
             }
 
-            # Upload folder recursively using scp
-            $scpArgs = $sshBase + @("-r", $localInstPath, "$($targetUserIp):$workdir/")
+            # --- LOCAL STAGING & FILTERING ---
+            # Create a temporary staging directory to filter out unwanted extensions (*.log, *.gz)
+            $stagingBase = Join-Path $env:TEMP "AppSyncStaging"
+            $stagingInstPath = Join-Path $stagingBase $instName
+
+            if (Test-Path $stagingInstPath) { 
+                Remove-Item -Path $stagingInstPath -Recurse -Force -ErrorAction SilentlyContinue 
+            }
+
+            # Use robocopy to mirror local files to staging while excluding logs and archives
+            # (/E = copy subdirectories including empty ones, /XF = exclude files)
+            robocopy $localInstPath $stagingInstPath /E /XF *.log *.gz /NJH /NJS /NC /NS | Out-Null
+            # (Robocopy exit codes 0-7 indicate success or normal file copy states)
+            # ---------------------------------
+
+            # Upload the filtered staging folder via scp
+            $scpArgs = $sshBase + @("-r", $stagingInstPath, "$($targetUserIp):$workdir/")
             & scp @scpArgs
 
             if ($LASTEXITCODE -eq 0) {
-                Write-Host "  -> Successfully uploaded instance folder '$instName'." -ForegroundColor Green
+                Write-Host "  -> Successfully uploaded instances '$instName'." -ForegroundColor Green
             } else {
-                Write-Error "  -> Failed to upload instance folder '$instName'."
+                Write-Host "  -> Failed to upload instance folder '$instName'." -ForegroundColor Red
             }
+
+            # Clean up local staging temp folder immediately after scp completes
+            Remove-Item -Path $stagingInstPath -Recurse -Force -ErrorAction SilentlyContinue
 
             $chmodScript = @"
 if [ -d "$workdir" ]; then
-    echo "Setting executable permissions for .sh files in $workdir..."
+    echo "Setting executable permissions for .sh files"
     find "$workdir" -type f -name "*.sh" -exec chmod 760 {} +
     echo "Permissions updated successfully."
 fi
@@ -108,9 +126,9 @@ fi
             & ssh @chmodArgs
 
             if ($LASTEXITCODE -eq 0) {
-                Write-Host "All shell scripts are now executable." -ForegroundColor Green
+                Write-Host "All script permissions has been updated." -ForegroundColor Green
             } else {
-                Write-Error "Failed to update script permissions."
+                Write-Host "Failed to update script permissions." -ForegroundColor Red
             }
         } else {
             Write-Host "  -> Instance '$instName' already exists on remote. (In sync)" -ForegroundColor Green

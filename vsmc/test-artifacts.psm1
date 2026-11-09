@@ -24,8 +24,8 @@ function Test-Artifacts {
     $isOk = $hasZip -or $allFoldersExist
 
     # Display findings
-    $foundTxt = "`e[32mFOUND`e[0m"
-    $notFoundTxt = "`e[31mNOT FOUND`e[0m"
+    $foundTxt = "$([char]27)[32mFOUND$([char]27)[0m"
+    $notFoundTxt = "$([char]27)[31mNOT FOUND$([char]27)[0m"
     Write-Host "`n--- Status Check ---" -ForegroundColor Yellow
     Write-Host "  - XMCS.zip : $(if ($hasZip) { $foundTxt } else { $notFoundTxt })"
     Write-Host "  - amhs_emulator folder: $(if ($hasO1) { $foundTxt } else { $notFoundTxt })"

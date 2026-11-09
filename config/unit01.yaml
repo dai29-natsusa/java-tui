@@ -41,7 +41,7 @@ unit:
       - name: "xmcs_server"
         pid: 999
         location: "${unit.units.unit01.workdir}/xmcs_server/scripts/core.sh"
-      - name: "amps_emulator"
+      - name: "amhs_emulator"
         pid: 888
         location: "${unit.units.unit01.workdir}/amhs_emulator/scripts/emu.sh"
       - name: "xmcs-monitor"

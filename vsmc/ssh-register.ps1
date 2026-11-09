@@ -1,66 +1,65 @@
-param (
-    [Parameter(Mandatory = $true)]
-    [string]$Unit
-)
-
 . "$PSScriptRoot/configs.ps1"
 
-$ServerIp   = $Global:AppConfig.unit.units[$Unit].ip
+$appConfig = $Global:AppConfig
 
-$HostExists = $false
+foreach ($unitKey in $appConfig.unit.units.Keys) {
+    $ServerIp = $appConfig.unit.units[$unitKey].ip
 
-if (Test-Path $knownHosts)
-{
-    $HostExists = Get-Content $knownHosts |
-            Select-String -SimpleMatch $ServerIp -Quiet
-}
+    if ($appConfig.unit.units[$unitKey].status -eq "offline") {
+        continue
+    }
 
-if (-not $HostExists)
-{
-    ssh-keyscan $ServerIp 2>$null |
-        Out-File `
-            -Append `
-            -Encoding ascii `
-            $knownHosts
-}
+    $HostExists = $false
 
-if ($Global:AppConfig.unit.units[$Unit].status -eq "offline") {
-    exit 0
-}
+    if (Test-Path $knownHosts)
+    {
+        $HostExists = Get-Content $knownHosts |
+                Select-String -SimpleMatch $ServerIp -Quiet
+    }
 
-$PubKey = (Get-Content $publicKey -Raw).Trim()
-$PubKeyEscaped = $PubKey.Replace("'", "'\''")
+    if (-not $HostExists)
+    {
+        ssh-keyscan $ServerIp 2>$null |
+            Out-File `
+                -Append `
+                -Encoding ascii `
+                $knownHosts
+    }
 
-$RemoteCommand = "mkdir -p ~/.ssh && " +
-"chmod 700 ~/.ssh && " +
-"touch ~/.ssh/authorized_keys && " +
-"chmod 600 ~/.ssh/authorized_keys && " +
-"grep -qxF '$PubKeyEscaped' ~/.ssh/authorized_keys || echo '$PubKeyEscaped' >> ~/.ssh/authorized_keys"
+    $PubKey = (Get-Content $publicKey -Raw).Trim()
+    $PubKeyEscaped = $PubKey.Replace("'", "'\''")
 
-$SshPass  = "$PSScriptRoot/sshp.exe"
+    $RemoteCommand = "mkdir -p ~/.ssh && " +
+    "chmod 700 ~/.ssh && " +
+    "touch ~/.ssh/authorized_keys && " +
+    "chmod 600 ~/.ssh/authorized_keys && " +
+    "grep -qxF '$PubKeyEscaped' ~/.ssh/authorized_keys || echo '$PubKeyEscaped' >> ~/.ssh/authorized_keys"
 
-$Users = $Global:AppConfig.unit.units[$Unit].users
-foreach ($role in $Users.Keys) {
-    $user = $Users[$role]
-    Write-Host "$($user.username)"
-    $password = $user.password
-    & $SshPass `
-        -p $password `
-        ssh `
-        -o StrictHostKeyChecking=no `
-        -o UserKnownHostsFile="$knownHosts" `
-        "$($user.username)@$ServerIp" `
-        $RemoteCommand
+    $SshPass  = "$PSScriptRoot/sshp.exe"
 
-    if ($LASTEXITCODE -eq 0) {
-        ssh `
-            -i $privateKey `
-            -o BatchMode=yes `
-            -o StrictHostKeyChecking=yes `
+    $Users = $appConfig.unit.units[$unitKey].users
+    foreach ($role in $Users.Keys) {
+        $user = $Users[$role]
+        Write-Host "$($user.username)"
+        $password = $user.password
+        & $SshPass `
+            -p $password `
+            ssh `
+            -o StrictHostKeyChecking=no `
             -o UserKnownHostsFile="$knownHosts" `
             "$($user.username)@$ServerIp" `
-            "echo $($user.username)_SSH_KEY_AUTH_OK" | Tee-Object "$configDir/$($user.username).txt"
-    } else {
-        Write-Host "User: [$($user.username)] doesn't exist" -ForegroundColor Red
+            $RemoteCommand
+
+        if ($LASTEXITCODE -eq 0) {
+            ssh `
+                -i $privateKey `
+                -o BatchMode=yes `
+                -o StrictHostKeyChecking=yes `
+                -o UserKnownHostsFile="$knownHosts" `
+                "$($user.username)@$ServerIp" `
+                "echo $($user.username)_SSH_KEY_AUTH_OK" | Tee-Object "$configDir/$($user.username).txt"
+        } else {
+            Write-Host "User: [$($user.username)] doesn't exist" -ForegroundColor Red
+        }
     }
 }

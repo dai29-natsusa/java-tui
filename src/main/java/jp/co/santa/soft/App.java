@@ -29,7 +29,6 @@ public class App implements Runnable, QuarkusApplication {
   private static final Logger LOG = Logger.getLogger(App.class);
 
   @Inject CommandLine.IFactory factory;
-
   @Inject MainDashboardView dashboardView;
 
   @Option(

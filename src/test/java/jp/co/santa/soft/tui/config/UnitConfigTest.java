@@ -55,7 +55,7 @@ class UnitConfigTest {
     assertEquals(
         "/home/xmcs/XMCS/xmcs_server/scripts/core.sh",
         unitConfig.units().get(unit01).instances().getFirst().location());
-    assertEquals("amps_emulator", unitConfig.units().get(unit01).instances().get(1).name());
+    assertEquals("amhs_emulator", unitConfig.units().get(unit01).instances().get(1).name());
     assertEquals(888, unitConfig.units().get(unit01).instances().get(1).pid());
     assertEquals(
         "/home/xmcs/XMCS/amhs_emulator/scripts/emu.sh",

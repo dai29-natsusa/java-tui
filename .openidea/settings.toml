@@ -1,0 +1,12 @@
+[languages.java]
+jdk = "C:/Program Files/Eclipse Adoptium/jdk-25-hotspot"
+jdtlsJdk = "C:/Program Files/Eclipse Adoptium/jdk-25-hotspot"
+
+[languages.java.gradle]
+jvm = "C:/Program Files/Eclipse Adoptium/jdk-25-hotspot"
+
+[languages.node]
+packageManager = "pnpm"
+
+[spelling]
+projectWords = ["tambo"]

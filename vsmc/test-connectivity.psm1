@@ -6,6 +6,7 @@ function Test-UnitConnectivity {
     )
 
     Write-Host "Checking connectivity for all remote units..." -ForegroundColor Cyan
+    $socket = New-Object System.Net.Sockets.TcpClient
 
     foreach ($unitKey in $Config.unit.units.Keys) {
         $unitObj = $Config.unit.units[$unitKey]
@@ -16,8 +17,10 @@ function Test-UnitConnectivity {
 
             $isOnline = $false
             try {
-                $null = ($netTest = Test-NetConnection -ComputerName $targetIp -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue -ErrorAction Stop)
-                if ($netTest) { $isOnline = $true }
+                # $null = ($netTest = Test-NetConnection -ComputerName $targetIp -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue -ErrorAction Stop)
+                $connect = $socket.BeginConnect($targetIp, 22, $null, $null)
+                $success = $connect.AsyncWaitHandle.WaitOne(1500, $false)
+                if ($success -and $socket.Connected) { $isOnline = $true }
             } catch {
                 $isOnline = $false
             }

@@ -3,6 +3,7 @@ plugins {
     java
     id("io.quarkus")
     id("com.diffplug.spotless") version "8.10.4"
+    id("io.github.ag-libs.lathe") version "0.3.0"
 }
 
 val quarkusPlatformGroupId = project.property("quarkusPlatformGroupId")
