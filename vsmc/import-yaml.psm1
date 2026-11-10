@@ -141,4 +141,33 @@ function Import-Yaml {
     $Script:GlobalYamlCache = $masterConfig
     return $Script:GlobalYamlCache
 }
+
+function Get-MatrixFromCsv {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$HeapString
+    )
+
+    # 1. Split the multiline string into individual lines
+    $lines = $HeapString -split "`r?`n" | Where-Object { $_.Trim() -ne "" }
+
+    # 2. Extract headers from the comment line (e.g., "# module, xms,  xms" -> "module,xms,xms")
+    $headerLine = $lines | Where-Object { $_ -match '^\s*#' } | Select-Object -First 1
+    if (-not $headerLine) {
+        throw "Heap configuration is missing the header comment definition."
+    }
+    $csvHeader = ($headerLine -replace '^\s*#\s*', '') -replace '\s*,\s*', ','
+
+    # 3. Get all data lines (exclude lines starting with '#')
+    $dataLines = $lines | Where-Object { $_ -notmatch '^\s*#' }
+
+    # 4. Combine header and data lines into a standard CSV format string
+    $csvContent = "$csvHeader`n" + ($dataLines -join "`n")
+
+    # 5. Convert to PowerShell custom objects representing your table
+    return $csvContent | ConvertFrom-Csv
+}
+
 Export-ModuleMember -Function Import-Yaml
+Export-ModuleMember -Function Get-MatrixFromCsv
