@@ -1,4 +1,5 @@
 {
     "java.configuration.updateBuildConfiguration": "interactive",
-    "files.eol": "\n"
+    "files.eol": "\n",
+    "files.autoSave": "onFocusChange"
 }
