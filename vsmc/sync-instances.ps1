@@ -1,5 +1,8 @@
 param(
     [Parameter(Mandatory = $false)]
+    [string]$Role = "runner",
+
+    [Parameter(Mandatory = $false)]
     [string]$Path = "$PSScriptRoot",
 
     [Parameter(Mandatory = $false)]
@@ -11,25 +14,30 @@ param(
 $appConfig = $Global:AppConfig
 
 foreach ($unitKey in $appConfig.unit.units.Keys) {
+    $UnitConfig = $appConfig.unit.units[$unitKey]
 
-    if ($appConfig.unit.units[$unitKey].status -eq "offline") {
+    if ($UnitConfig.status -eq "offline") {
         Write-Host "$unitKey is OFFLINE" -ForegroundColor DarkYellow
         continue
     }
 
-    $UnitConfig = $appConfig.unit.units[$unitKey]
-    $workdir = $UnitConfig.workdir
-    Write-Host "Synchronizing instances for unit at workdir: $workdir" -ForegroundColor Cyan
+    $userMap = $UnitConfig.users
+    if ($userMap -and -not $userMap.ContainsKey($Role)) {
+        continue
+    }
 
-    $targetUserIp = "$($UnitConfig.users.runner.username)@$($UnitConfig.ip)"
+    $workdir = $UnitConfig.users[$Role].workdir
+    Write-Host "Synchronizing to workdir: $workdir" -ForegroundColor Cyan
+
+    $targetUserIp = "$($UnitConfig.users[$Role].username)@$($UnitConfig.ip)"
     # Ensure the parent workdir exists remotely
     $mkdirArgs = $sshBase + @("$targetUserIp", "mkdir -p $workdir")
     & ssh @mkdirArgs | Out-Null
 
     # 1. Get the list of instance names defined in the YAML configuration
     $configInstanceNames = @()
-    if ($UnitConfig.instances) {
-        foreach ($inst in $UnitConfig.instances) {
+    if ($UnitConfig.users[$Role].instances) {
+        foreach ($inst in $UnitConfig.users[$Role].instances) {
             $configInstanceNames += $inst.name
         }
     }
@@ -53,12 +61,10 @@ fi
     Write-Host "  -> Configured instances: $($configInstanceNames -join ', ')" -ForegroundColor DarkGray
     Write-Host "  -> Remote existing dirs:  $($remoteInstanceNames -join ', ')" -ForegroundColor DarkGray
 
-    # ==========================================
     # 3. REMOVE EXTRA INSTANCES (Remote has it, but Config does NOT)
-    # ==========================================
     foreach ($remoteDir in $remoteInstanceNames) {
-        if ($configInstanceNames -notcontains $remoteDir) {
-            Write-Host "  -> Extra instance found on remote ('$remoteDir') which is missing from YAML config. Removing..." -ForegroundColor Yellow
+        if ($configInstanceNames -notcontains $remoteDir) { 
+            Write-Host "  -> Extra unequals instance found on remote ('$remoteDir'). Removing..." -ForegroundColor Yellow
 
             $removePath = "$workdir/$remoteDir"
             $removeScript = "rm -rf '$removePath'"
@@ -68,20 +74,17 @@ fi
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "  -> Successfully removed extra instance folder: $remoteDir" -ForegroundColor Green
             } else {
-                Write-Error "  -> Failed to remove extra instance folder: $remoteDir"
+                Write-Host "  -> Failed to remove extra instance folder: $remoteDir" -ForegroundColor Red
             }
         }
     }
 
-    # ==========================================
-    # 4. UPLOAD MISSING INSTANCES (Filtered: Excluding .log and .gz)
-    # ==========================================
-    foreach ($inst in $UnitConfig.instances) {
+    # 4. UPLOAD INSTANCES (Filtered: Excluding .log and .gz)
+    foreach ($inst in $UnitConfig.users[$Role].instances) {
         $instName = $inst.name
         $localInstPath = Join-Path $Path $instName
 
         if ($remoteInstanceNames -notcontains $instName -or $Force) {
-
             if (-not (Test-Path -Path $localInstPath)) {
                 Write-Warning "  -> Local instance source folder not found at: $localInstPath"
                 continue

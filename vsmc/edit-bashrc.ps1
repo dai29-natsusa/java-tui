@@ -1,3 +1,11 @@
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$User,
+
+    [Parameter(Mandatory = $true)]
+    [string]$File
+)
+
 . "$PSScriptRoot/configs.ps1"
 
 $appConfig = $Global:AppConfig
@@ -8,9 +16,9 @@ foreach ($unitKey in $appConfig.unit.units.Keys) {
         continue
     }
 
-    $xbashLocal = Join-Path -Path $PSScriptRoot -ChildPath "bash/xmcs_bashrc.sh"
-    $xbashRemote = '~/xmcs_bashrc.sh'
-    $username = $appConfig.unit.units[$unitKey].users.runner.username
+    $xbashLocal = Join-Path -Path $PSScriptRoot -ChildPath "bash/$File"
+    $xbashRemote = '~/' + $File
+    $username = $appConfig.unit.units[$unitKey].users[$User].username
     $targetUserIp = "$($username)@$($appConfig.unit.units[$unitKey].ip)"
 
     $scpArgs = $sshBase + @(
@@ -28,7 +36,7 @@ foreach ($unitKey in $appConfig.unit.units.Keys) {
     $blockContent = @"
 $startMarker
 if [ "`$USER" = "$username" ]; then
-    source "`$HOME/xmcs_bashrc.sh"
+    source "`$HOME/$File"
 fi
 $endMarker
 "@
@@ -37,6 +45,6 @@ $endMarker
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Appending to .bashrc" -ForegroundColor Gray
-        $blockContent -replace "`r`n", "`n" | ssh @sshBase "$targetUserIp" "tr -d '\r' >> ~/.bashrc"
+        $blockContent -replace "`r`n", "`n" | ssh @sshBase $targetUserIp "tr -d '\r' >> ~/.bashrc"
     }
 }

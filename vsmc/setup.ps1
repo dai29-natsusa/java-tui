@@ -34,6 +34,8 @@ Test-UnitConnectivity -Config $Global:AppConfig
 # Step 5 - register public key to remote
 & "$PSScriptRoot/ssh-register.ps1"
 # Step 6 - modify RUNNER user's bashrc
-& "$PSScriptRoot/edit-bashrc.ps1"
+& "$PSScriptRoot/edit-bashrc.ps1" -User runner -File "xmcs_bashrc.sh"
+& "$PSScriptRoot/edit-bashrc.ps1" -User dbsys -File "oracle_bashrc.sh"
 # Step 7 - synchronize artifacts
-& "$PSScriptRoot/sync-instances.ps1" -Force
+# & "$PSScriptRoot/sync-instances.ps1" -Role runner -Force
+# & "$PSScriptRoot/deploy-oracle.ps1"
