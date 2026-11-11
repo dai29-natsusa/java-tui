@@ -7,7 +7,6 @@ unit:
       name: "xmcs1"
       ip: "192.168.40.10"
       hostname: "ol8xmcs1"
-      workdir: "/home/xmcs/XMCS"
       # spotless:off
       heap: |
         # module, xms,  xms
@@ -25,11 +24,44 @@ unit:
           password: "${RUNNER_PW}"
           user-id: -1
           group-id: -1
+          workdir: "/home/xmcs/XMCS"
+          localdir: "./"
+          instances:
+          - name: "xmcs_server"
+          - name: "amhs_emulator"
+          - name: "xmcs-monitor"
         dbsys:
           username: "oracle"
           password: "${ORACLE_PW}"
           user-id: -1
           group-id: -1
+          workdir: "/home/oracle/tmp"
+          localdir: "oracle"
+          instances:
+          - name: "user"
+          - name: "data"
+          database:
+            sid: xmcs
+            connection-string: "sys/sys@${unit.units.unit01.ip}:1521/${unit.units.unit01.users.dbsys.database.sid} as sysdba"
+            db-users:
+              core:
+                u: xmcs
+                p: ${CORE_PW}
+                script: "users/${unit.units.unit01.users.dbsys.database.db-users.core.u}.sql"
+                dump: "data/${unit.units.unit01.users.dbsys.database.db-users.core.u}.dmp"
+                fromuser: xmcs_vsmc
+              emu:
+                u: emu
+                p: ${EMU_PW}
+                script: "users/${unit.units.unit01.users.dbsys.database.db-users.emu.u}.sql"
+                dump: "data/${unit.units.unit01.users.dbsys.database.db-users.emu.u}.dmp"
+                fromuser: emu_vsmc
+              hist:
+                u: xmcshist
+                p: ${HIST_PW}
+                script: "users/${unit.units.unit01.users.dbsys.database.db-users.hist.u}.sql"
+                dump: "data/${unit.units.unit01.users.dbsys.database.db-users.hist.u}.dmp"
+                fromuser: hist_vsmc
         admin:
           username: "root"
           password: "${ROOT_PW}"
@@ -37,13 +69,3 @@ unit:
       - id: 1
         name: "oracle"
         pid: 999
-      instances:
-      - name: "xmcs_server"
-        pid: 999
-        location: "${unit.units.unit01.workdir}/xmcs_server/scripts/core.sh"
-      - name: "amhs_emulator"
-        pid: 888
-        location: "${unit.units.unit01.workdir}/amhs_emulator/scripts/emu.sh"
-      - name: "xmcs-monitor"
-        pid: 777
-        location: "${unit.units.unit01.workdir}/xmcs-monitor/scripts/monitor.sh"

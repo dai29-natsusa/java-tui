@@ -7,7 +7,6 @@ unit:
       name: "xmcs2"
       ip: "192.168.40.11"
       hostname: "ol8xmcs2"
-      workdir: "/home/xmcs/XMCS"
       # spotless:off
       heap: |
         # module, xms,  xms
@@ -25,11 +24,13 @@ unit:
           password: "${RUNNER_PW}"
           user-id: -1
           group-id: -1
-        dbsys:
-          username: "oracle"
-          password: "${ORACLE_PW}"
-          user-id: -1
-          group-id: -1
+          workdir: "/home/xmcs/XMCS"
+          localdir: "./"
+          instances:
+          - name: "xmcs_server"
+            pid: 999
+          - name: "xmcs-monitor"
+            pid: 777
         admin:
           username: "root"
           password: "${ROOT_PW}"
@@ -37,10 +38,3 @@ unit:
       - id: 1
         name: "oracle"
         pid: 999
-      instances:
-      - name: "xmcs_server"
-        pid: 999
-        location: "${unit.units.unit02.workdir}/xmcs_server/scripts/core.sh"
-      - name: "xmcs-monitor"
-        pid: 777
-        location: "${unit.units.unit02.workdir}/xmcs-monitor/scripts/monitor.sh"
